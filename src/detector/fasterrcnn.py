@@ -74,7 +74,7 @@ class FasterRCNN:
         labList = unique_labels.tolist()
         
         # if labList != [1, 37]:
-        if (1 not in labList) and (37 not in labList):
+        if ((1 not in labList) and (37 not in labList)) and labList != []:
             print("Valores únicos en 'labels':", labList)
             raise Exception("The model is not detecting the desired classes.")
 
