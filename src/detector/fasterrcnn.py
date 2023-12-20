@@ -14,6 +14,7 @@ class FasterRCNN:
         # automatically set device if its None
         elif device is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
+            print(device)
 
         self.device = device  # <-- Asignar el dispositivo aquí
 
@@ -27,7 +28,7 @@ class FasterRCNN:
 
 
   
-def predict(
+    def predict(
         self,
         img: Union[str, np.ndarray],
         conf_threshold: float = 0.5,
@@ -66,6 +67,19 @@ def predict(
         selected_indices = torch.where(((labels == 1) | (labels == 37)) & (scores >= conf_threshold))[0]
         boxes = boxes[selected_indices]
         scores = scores[selected_indices]
+        labels = labels[selected_indices]
+                
+        # Verificar los valores únicos en 'labels'
+        unique_labels = torch.unique(labels)
+        labList = unique_labels.tolist()
+        
+        # if labList != [1, 37]:
+        if (1 not in labList) and (37 not in labList):
+            print("Valores únicos en 'labels':", labList)
+            raise Exception("The model is not detecting the desired classes.")
+
+        # print("Valores únicos en 'labels':", unique_labels.tolist())
+
 
         return boxes, scores, labels
     

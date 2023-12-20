@@ -16,7 +16,7 @@ class NorfairTracker():
         pass
     
 
-    def track(self, input_video: str, model, model_threshold, track_points):
+    def track(self, input_video: str, model, model_threshold, track_points: str = None):
         
         coord_transformations = None
         paths_drawer = None
@@ -46,14 +46,14 @@ class NorfairTracker():
             paths_drawer = AbsolutePaths(max_history=40, thickness=2)
             
         for frame in video:
-            rcnn_boxes, rcnn_scores, rcnn_labels = model(frame, conf_threshold=model_threshold)  # Change the model call here
+            rcnn_boxes, rcnn_scores, rcnn_labels = model.predict(frame, conf_threshold=model_threshold)  # Change the model call here
 
             mask = np.ones(frame.shape[:2], frame.dtype)
 
             coord_transformations = motion_estimator.update(frame, mask)
 
             detections = self.rcnn_detections_to_norfair_detections(
-                rcnn_boxes, rcnn_scores, track_points=track_points  # Change the conversion function call here
+                rcnn_boxes, rcnn_scores, track_points  # Change the conversion function call here
             )
 
             tracked_objects = tracker.update(
@@ -62,7 +62,7 @@ class NorfairTracker():
 
             frame = draw(
                 paths_drawer,
-                #track_points,
+                track_points,
                 frame,
                 detections,
                 tracked_objects,
@@ -71,7 +71,7 @@ class NorfairTracker():
             )
             video.write(frame)
             
-    def rcnn_detections_to_norfair_detections(
+    def rcnn_detections_to_norfair_detections(self, 
         rcnn_boxes: torch.Tensor,
         rcnn_scores: torch.Tensor,
         track_points: str = "centroid"  # bbox or centroid

@@ -11,7 +11,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Choose task to run')
 
     # Crea los subparsers
-    subparsers = parser.add_subparsers(dest='task', help='Choose task to run', default='default_task')
+    subparsers = parser.add_subparsers(dest='task', help='Choose task to run'
+                                       #, default='default_task'
+                                       )
     
     ############ Crea el parser para la tarea "Track" ###########################
     parser_track = subparsers.add_parser('track', help='Track objects in files')

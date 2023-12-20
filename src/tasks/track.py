@@ -11,7 +11,7 @@ def track(input_video, conf_threshold, track_points):
 
     modelTracker.track(
         input_video=input_video, 
-        modelDetector=modelDetector, 
+        model=modelDetector, 
         model_threshold=conf_threshold, 
         track_points=track_points
     )
