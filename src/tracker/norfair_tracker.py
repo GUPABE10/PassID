@@ -46,14 +46,14 @@ class NorfairTracker():
             paths_drawer = AbsolutePaths(max_history=40, thickness=2)
             
         for frame in video:
-            rcnn_boxes, rcnn_scores, rcnn_labels = model.predict(frame, conf_threshold=model_threshold)  # Change the model call here
+            model_boxes, model_scores, model_labels = model.predict(frame, conf_threshold=model_threshold)  # Change the model call here
 
             mask = np.ones(frame.shape[:2], frame.dtype)
 
             coord_transformations = motion_estimator.update(frame, mask)
 
             detections = self.rcnn_detections_to_norfair_detections(
-                rcnn_boxes, rcnn_scores, track_points  # Change the conversion function call here
+                model_boxes, model_scores, track_points  # Change the conversion function call here
             )
 
             tracked_objects = tracker.update(

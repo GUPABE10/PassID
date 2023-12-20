@@ -9,6 +9,7 @@ def track(input_video, conf_threshold, track_points):
     
     modelTracker = NorfairTracker()  # Change the model initialization here
 
+    # If the model for tracking is changed, the track function must be changed
     modelTracker.track(
         input_video=input_video, 
         model=modelDetector, 

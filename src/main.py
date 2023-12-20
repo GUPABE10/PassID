@@ -30,14 +30,10 @@ if __name__ == "__main__":
         default="bbox",
         help="Track points: 'centroid' or 'bbox'",
     )
+    parser_track.add_argument(
+        "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
+    )
     
-    
-    ## TODO: Encontrar como implementar device
-    # parser_track.add_argument(
-    #     "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
-    # )
-    
-
     
     
     # Cambiar a otras tareas
