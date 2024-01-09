@@ -1,0 +1,25 @@
+Epoch,Metric Type,IoU,Area,maxDets,Value
+0,Precision,0.50:0.95,all,100,0.183
+0,Precision,0.50,all,100,0.367
+0,Precision,0.75,all,100,0.166
+0,Precision,0.50:0.95,small,100,0.135
+0,Precision,0.50:0.95,medium,100,0.202
+0,Precision,0.50:0.95,large,100,0.351
+0,Recall,0.50:0.95,all,1,0.100
+0,Recall,0.50:0.95,all,10,0.241
+0,Recall,0.50:0.95,all,100,0.438
+0,Recall,0.50:0.95,small,100,0.310
+0,Recall,0.50:0.95,medium,100,0.390
+0,Recall,0.50:0.95,large,100,0.709
+1,Precision,0.50:0.95,all,100,0.209
+1,Precision,0.50,all,100,0.396
+1,Precision,0.75,all,100,0.201
+1,Precision,0.50:0.95,small,100,0.161
+1,Precision,0.50:0.95,medium,100,0.188
+1,Precision,0.50:0.95,large,100,0.364
+1,Recall,0.50:0.95,all,1,0.129
+1,Recall,0.50:0.95,all,10,0.294
+1,Recall,0.50:0.95,all,100,0.501
+1,Recall,0.50:0.95,small,100,0.400
+1,Recall,0.50:0.95,medium,100,0.402
+1,Recall,0.50:0.95,large,100,0.728

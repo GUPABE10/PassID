@@ -16,5 +16,3 @@ def track(input_video, conf_threshold, track_points):
         model_threshold=conf_threshold, 
         track_points=track_points
     )
-
-    pass
