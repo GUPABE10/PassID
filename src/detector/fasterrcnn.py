@@ -3,10 +3,10 @@ import numpy as np
 import cv2
 import torch
 import torchvision
-from torchvision.models.detection import FasterRCNN_ResNet50_FPN_V2_Weights
+from torchvision.models.detection import FasterRCNN_ResNet50_FPN_V2_Weights, FasterRCNN_MobileNet_V3_Large_FPN_Weights
 
 class FasterRCNN:
-    def __init__(self, device: Optional[str] = None):
+    def __init__(self, backbone, device: Optional[str] = None):
         if device is not None and "cuda" in device and not torch.cuda.is_available():
             raise Exception(
                 "Selected device='cuda', but cuda is not available to Pytorch."
@@ -21,7 +21,12 @@ class FasterRCNN:
 
         # load model
         try:
-            self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
+            if backbone == "mobilenetHigh":
+                print("MobileNet HD")
+                self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+            else: # resnet50v2
+                print("ResNet50 v2")
+                self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
             self.model = self.model.to(self.device)
             self.model.eval()
         except:
