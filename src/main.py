@@ -45,6 +45,12 @@ if __name__ == "__main__":
         default="scalar",
         help="scalar or iou",
     )
+    parser_track.add_argument(
+        "--backbone",
+        type=str,
+        default="resnet50v2",
+        help="backbone for object detector",
+    )
     
     
     # Cambiar a otras tareas
@@ -67,7 +73,8 @@ if __name__ == "__main__":
             args.conf_threshold,  
             args.track_points,
             args.distance_threshold,
-            args.distance_function
+            args.distance_function,
+            args.backbone
         )
         
     elif args.task == 'task2':
