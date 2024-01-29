@@ -14,7 +14,8 @@ class FasterRCNN:
         # automatically set device if its None
         elif device is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            print(device)
+        
+        print(device)
 
         self.device = device  # <-- Asignar el dispositivo aquí
 
@@ -60,26 +61,42 @@ class FasterRCNN:
         boxes = prediction[0]["boxes"]
         scores = prediction[0]["scores"]
         labels = prediction[0]["labels"] # New
+        
+        
+        # Original code
+
+        # # Apply confidence threshold
+        # # selected_indices = scores >= conf_threshold
+        # # Filter for desired classes: 1 for "person", 37 for "sports ball"
+        # selected_indices = torch.where(((labels == 1) | (labels == 37)) & (scores >= conf_threshold))[0]
+        # boxes = boxes[selected_indices]
+        # scores = scores[selected_indices]
+        # labels = labels[selected_indices]
+                
+        # # Verificar los valores únicos en 'labels'
+        # unique_labels = torch.unique(labels)
+        # labList = unique_labels.tolist()
+        
+        # # if labList != [1, 37]:
+        # if ((1 not in labList) and (37 not in labList)) and labList != []:
+        #     print("Valores únicos en 'labels':", labList)
+        #     raise Exception("The model is not detecting the desired classes.")
+
+        # # print("Valores únicos en 'labels':", unique_labels.tolist())
+        
+        
+        # New Code
+
+        # Filter for desired classes: 1 for "person", 37 for "sports ball"
+        desired_classes = (labels == 1) | (labels == 37)
+        if not desired_classes.any():
+            raise Exception("The model is not detecting the desired classes.")
 
         # Apply confidence threshold
-        # selected_indices = scores >= conf_threshold
-        # Filter for desired classes: 1 for "person", 37 for "sports ball"
-        selected_indices = torch.where(((labels == 1) | (labels == 37)) & (scores >= conf_threshold))[0]
+        selected_indices = torch.where(desired_classes & (scores >= conf_threshold))[0]
         boxes = boxes[selected_indices]
         scores = scores[selected_indices]
         labels = labels[selected_indices]
-                
-        # Verificar los valores únicos en 'labels'
-        unique_labels = torch.unique(labels)
-        labList = unique_labels.tolist()
-        
-        # if labList != [1, 37]:
-        if ((1 not in labList) and (37 not in labList)) and labList != []:
-            print("Valores únicos en 'labels':", labList)
-            raise Exception("The model is not detecting the desired classes.")
-
-        # print("Valores únicos en 'labels':", unique_labels.tolist())
-
 
         return boxes, scores, labels
     

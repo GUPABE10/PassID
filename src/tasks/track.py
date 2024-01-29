@@ -2,7 +2,7 @@ from detector.fasterrcnn import FasterRCNN
 from tracker.norfair_tracker import NorfairTracker
 
 
-def track(input_video, conf_threshold, track_points):
+def track(input_video, conf_threshold, track_points, distance_threshold, distance_function):
     print("Track")
     
     modelDetector = FasterRCNN()  # Change the model initialization here
@@ -14,5 +14,7 @@ def track(input_video, conf_threshold, track_points):
         input_video=input_video, 
         model=modelDetector, 
         model_threshold=conf_threshold, 
-        track_points=track_points
+        track_points=track_points,
+        distance_threshold = distance_threshold,
+        distance_function = distance_function
     )

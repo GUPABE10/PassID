@@ -6,20 +6,22 @@ from draw import center, draw
 
 from norfair import AbsolutePaths, Paths, Tracker, Video, Detection
 from norfair.camera_motion import HomographyTransformationGetter, MotionEstimator
-from norfair.distances import create_normalized_mean_euclidean_distance
+from norfair.distances import create_normalized_mean_euclidean_distance, iou
 
 DISTANCE_THRESHOLD_CENTROID: float = 0.08
 
+# DISTANCE_TRESHOLD = 100
 
 class NorfairTracker():
     def __init__(self):
         pass
     
 
-    def track(self, input_video: str, model, model_threshold, track_points: str = None):
+    def track(self, input_video: str, model, model_threshold, distance_threshold, distance_function: str ,track_points: str = None) :
         
         coord_transformations = None
         paths_drawer = None
+        # fix_paths = False
         fix_paths = True
         
         video = Video(input_path=input_video)
@@ -30,10 +32,24 @@ class NorfairTracker():
             max_points=500, min_distance=7, transformations_getter=transformations_getter
         )
 
-        distance_function = create_normalized_mean_euclidean_distance(
-            video.input_height, video.input_width
-        )
-        distance_threshold = DISTANCE_THRESHOLD_CENTROID
+        # distance_function = create_normalized_mean_euclidean_distance(
+        #     video.input_height, video.input_width
+        # )
+        
+        if distance_function == "iou":
+            distance_function = "iou"
+        elif "scalar":
+            distance_function = create_normalized_mean_euclidean_distance(
+                video.input_height, video.input_width
+            )
+            distance_threshold = DISTANCE_THRESHOLD_CENTROID
+        else:
+            Warning("Distance function not recognized. Using default: scalar")
+            distance_function = create_normalized_mean_euclidean_distance(
+                video.input_height, video.input_width
+            )
+        
+            distance_threshold = DISTANCE_THRESHOLD_CENTROID
 
         tracker = Tracker(
             distance_function=distance_function,

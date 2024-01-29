@@ -33,7 +33,18 @@ if __name__ == "__main__":
     parser_track.add_argument(
         "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
     )
-    
+    parser_track.add_argument(
+        "--distance-threshold",
+        type=float,
+        default="1",
+        help="distance threshold",
+    )
+    parser_track.add_argument(
+        "--distance-function",
+        type=str,
+        default="scalar",
+        help="scalar or iou",
+    )
     
     
     # Cambiar a otras tareas
@@ -54,7 +65,9 @@ if __name__ == "__main__":
         track(
             args.files, 
             args.conf_threshold,  
-            args.track_points
+            args.track_points,
+            args.distance_threshold,
+            args.distance_function
         )
         
     elif args.task == 'task2':
