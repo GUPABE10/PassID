@@ -103,9 +103,4 @@ def process_complete_log_file_v2(filename):
 # Example usage
 # process_complete_log_file_v2('training_log.txt')  # Uncomment and replace with the actual log file name
 
-
-
-
-
-
 process_complete_log_file_v2('./data/training_detector/training_log.txt')  # Uncomment and replace with the actual log file name
