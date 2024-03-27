@@ -34,9 +34,9 @@ if __name__ == "__main__":
         default="bbox",
         help="Track points: 'centroid' or 'bbox'",
     )
-    parser_track.add_argument(
-        "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
-    )
+    # parser_track.add_argument(
+    #     "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
+    # )
     parser_track.add_argument(
         "--distance-threshold",
         type=float,
@@ -73,6 +73,18 @@ if __name__ == "__main__":
         default=0,
         help="the path is a video",
     )
+    parser_track.add_argument(
+        '--device', 
+        type=str, 
+        default="cuda:0",
+        help='CUDA Device'
+    )
+    parser_track.add_argument(
+        '--detector', 
+        type=str, 
+        default="FasterRCNN_pretrained",
+        help='Object Detector Model to be used'
+    )
     
     
     
@@ -100,7 +112,9 @@ if __name__ == "__main__":
             args.backbone,
             args.draw,
             args.evalFile,
-            args.isVideo
+            args.isVideo,
+            args.device,
+            args.detector
         )
         
     elif args.task == 'task2':

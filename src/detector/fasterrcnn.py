@@ -4,9 +4,44 @@ import cv2
 import torch
 import torchvision
 from torchvision.models.detection import FasterRCNN_ResNet50_FPN_V2_Weights, FasterRCNN_MobileNet_V3_Large_FPN_Weights
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
+import os
+from collections import OrderedDict
+
+def get_finetuned_model(backbone):
+    if backbone == "mobilenetHigh":
+        model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+    else: # FasterRCNN
+        print("finetuned resnet v2")
+        model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
+    # Obtener el número de características de entrada del clasificador
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    num_classes = 3
+    # Reemplazar la cabeza del clasificador con una nueva
+    model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, num_classes)
+    
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    weight_name = "FasterRCNN_finetuned_2epochs_noda.pth"
+    
+    ruta_modelo = os.path.join(script_dir, weight_name)
+    # model.load_state_dict(torch.load(ruta_modelo))
+    
+    state_dict = torch.load(ruta_modelo)
+    # Ajustar las claves en el state_dict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k[7:] if k.startswith('module.') else k  # Elimina el prefijo 'module.' de cada clave
+        new_state_dict[name] = v
+    
+    # Cargar el state_dict ajustado
+    model.load_state_dict(new_state_dict)
+
+    return model
 
 class FasterRCNN:
-    def __init__(self, backbone, device: Optional[str] = None):
+    def __init__(self, model, backbone, device: Optional[str] = None):
         if device is not None and "cuda" in device and not torch.cuda.is_available():
             raise Exception(
                 "Selected device='cuda', but cuda is not available to Pytorch."
@@ -18,15 +53,27 @@ class FasterRCNN:
         print(device)
 
         self.device = device  # <-- Asignar el dispositivo aquí
+        if "finetuned" in model:
+            self.isTuned = True
+        else:
+            self.isTuned = False
 
         # load model
         try:
             if backbone == "mobilenetHigh":
                 print("MobileNet HD")
-                self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+                
+                if model == "FasterRCNN_pretrained":
+                    self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+                elif model == "FasterRCNN_finetuned":
+                    self.model = get_finetuned_model(backbone)
             else: # resnet50v2
                 print("ResNet50 v2")
-                self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
+                if model == "FasterRCNN_pretrained":
+                    self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
+                elif model == "FasterRCNN_finetuned":
+                    self.model = get_finetuned_model(backbone)
+                
             self.model = self.model.to(self.device)
             self.model.eval()
         except:
@@ -92,10 +139,15 @@ class FasterRCNN:
         
         # New Code
 
-        # Filter for desired classes: 1 for "person", 37 for "sports ball"
-        desired_classes = (labels == 1) | (labels == 37)
+        if self.isTuned:
+            desired_classes = (labels == 1) | (labels == 2)
+        else:
+            # Filter for desired classes: 1 for "person", 37 for "sports ball"
+            desired_classes = (labels == 1) | (labels == 37)
+        
         if not desired_classes.any():
-            raise Exception("The model is not detecting the desired classes.")
+            print(labels)
+            # raise Exception("The model is not detecting the desired classes.")
 
         # Apply confidence threshold
         selected_indices = torch.where(desired_classes & (scores >= conf_threshold))[0]
