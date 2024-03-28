@@ -91,7 +91,7 @@ class FasterRCNN:
 
         Args:
             img (Union[str, np.ndarray]): Image path or numpy array.
-            conf_threshold (float, optional): Confidence threshold. Defaults to 0.25.
+            conf_threshold (float, optional): Confidence threshold. Defaults to 0.5.
 
         Returns:
             Tuple[torch.Tensor, torch.Tensor]: Returns detected boxes and their scores.
@@ -113,31 +113,7 @@ class FasterRCNN:
         boxes = prediction[0]["boxes"]
         scores = prediction[0]["scores"]
         labels = prediction[0]["labels"] # New
-        
-        
-        # Original code
-
-        # # Apply confidence threshold
-        # # selected_indices = scores >= conf_threshold
-        # # Filter for desired classes: 1 for "person", 37 for "sports ball"
-        # selected_indices = torch.where(((labels == 1) | (labels == 37)) & (scores >= conf_threshold))[0]
-        # boxes = boxes[selected_indices]
-        # scores = scores[selected_indices]
-        # labels = labels[selected_indices]
-                
-        # # Verificar los valores únicos en 'labels'
-        # unique_labels = torch.unique(labels)
-        # labList = unique_labels.tolist()
-        
-        # # if labList != [1, 37]:
-        # if ((1 not in labList) and (37 not in labList)) and labList != []:
-        #     print("Valores únicos en 'labels':", labList)
-        #     raise Exception("The model is not detecting the desired classes.")
-
-        # # print("Valores únicos en 'labels':", unique_labels.tolist())
-        
-        
-        # New Code
+    
 
         if self.isTuned:
             desired_classes = (labels == 1) | (labels == 2)
