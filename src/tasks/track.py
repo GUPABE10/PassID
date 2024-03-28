@@ -2,7 +2,7 @@ from detector.fasterrcnn import FasterRCNN
 from tracker.norfair_tracker import NorfairTracker
 
 
-def track(input_video, conf_threshold, track_points, distance_threshold, distance_function, backboneModel, draw, evalFile, isVideo):
+def track(input_video, conf_threshold, track_points, distance_threshold, distance_function, backboneModel, draw, evalFile, isVideo, outputDir):
     print("Track")
     
     modelDetector = FasterRCNN(backbone = backboneModel)  # Change the model initialization here
@@ -19,5 +19,6 @@ def track(input_video, conf_threshold, track_points, distance_threshold, distanc
         distance_function = distance_function,
         drawing = draw,
         evalFile = evalFile,
-        isVideo = isVideo
+        isVideo = isVideo,
+        outputDir = outputDir
     )

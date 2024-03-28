@@ -73,6 +73,12 @@ if __name__ == "__main__":
         default=0,
         help="the path is a video",
     )
+    parser_track.add_argument(
+        '--outputDir', 
+        type=str, 
+        default = "outputFiles",
+        help='Directory for outputs in eval mode'
+    )
     
     
     
@@ -100,7 +106,8 @@ if __name__ == "__main__":
             args.backbone,
             args.draw,
             args.evalFile,
-            args.isVideo
+            args.isVideo,
+            args.outputDir
         )
         
     elif args.task == 'task2':

@@ -39,7 +39,7 @@ class NorfairTracker():
                 f.write(','.join(line) + '\n')
 
 
-    def track(self, input_path: str, model, model_threshold, distance_threshold, distance_function: str , drawing: bool, evalFile: bool, isVideo: bool, track_points: str = None) :
+    def track(self, input_path: str, model, model_threshold, distance_threshold, distance_function: str , drawing: bool, evalFile: bool, isVideo: bool,outputDir: str, track_points: str = None) :
         
         coord_transformations = None
         paths_drawer = None
@@ -53,7 +53,9 @@ class NorfairTracker():
         # Separa la ruta en sus componentes para obtener el nombre del directorio padre
         path_components = full_path.split(os.sep)
         parent_folder_name = path_components[-2] if len(path_components) > 1 else 'a'
-        output_file = parent_folder_name + '.txt'
+
+        output_file = os.path.join(outputDir, parent_folder_name + '.txt')
+
         
         if isVideo:
             video_images = Video(input_path=input_path)
