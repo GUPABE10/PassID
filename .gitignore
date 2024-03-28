@@ -1,2 +1,3 @@
 # src/detector/FasterRCNN_finetuned_2epochs_noda.pth
 *.pth
+*.pt
