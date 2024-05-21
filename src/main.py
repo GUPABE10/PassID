@@ -3,6 +3,7 @@
 
 import argparse
 from tasks.track import track
+from tasks.team_id import classify_players
 
 
 if __name__ == "__main__":
@@ -34,9 +35,6 @@ if __name__ == "__main__":
         default="bbox",
         help="Track points: 'centroid' or 'bbox'",
     )
-    # parser_track.add_argument(
-    #     "--device", type=str, default=None, help="Inference device: 'cpu' or 'cuda'"
-    # )
     parser_track.add_argument(
         "--distance-threshold",
         type=float,
@@ -92,6 +90,14 @@ if __name__ == "__main__":
         help='Object Detector Model to be used'
     )
     
+    ############ crea el parser para la tarea "player_classification" ######################
+    parser_playerClass = subparsers.add_parser('player_classification', help='Identify the team to which each player belongs')
+    parser_playerClass.add_argument(
+        '--file', 
+        type=str, 
+        help='Input image to be clustered'
+    )
+    
     
     
     # Cambiar a otras tareas
@@ -124,8 +130,12 @@ if __name__ == "__main__":
             args.outputDir,
         )
         
-    elif args.task == 'task2':
-        print(args.task2_arg1)
-        print(args.task2_arg2)
+    elif args.task == 'player_classification':
+        print(args)
+        
+        classify_players(
+            args.file
+        )
+        
     elif args.task == 'default_task':
         print('Running default task')

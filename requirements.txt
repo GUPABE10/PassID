@@ -1,0 +1,9 @@
+torch==1.12.1
+torchvision==0.13.1
+rich==12.5.1
+opencv-python==4.6.0.66
+tqdm==4.64.1
+ultralytics
+hdbscan
+git+https://github.com/facebookresearch/detectron2.git
+git+https://github.com/tryolabs/norfair.git@master
