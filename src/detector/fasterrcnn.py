@@ -121,8 +121,8 @@ class FasterRCNN:
             # Filter for desired classes: 1 for "person", 37 for "sports ball"
             desired_classes = (labels == 1) | (labels == 37)
         
-        if not desired_classes.any():
-            print(labels)
+        # if not desired_classes.any():
+            # print(labels)
             # raise Exception("The model is not detecting the desired classes.")
 
         # Apply confidence threshold
