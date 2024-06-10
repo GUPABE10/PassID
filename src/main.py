@@ -1,120 +1,52 @@
 # Autor: Benjamin Gutierrez Padilla
 
-
 import argparse
 from tasks.track import track
 from tasks.team_id import classify_players
+from tasks.pass_detection import PassDetection
 
+def setup_track_parser(subparsers):
+    """Configura el subparser para la tarea 'track'."""
+    parser_track = subparsers.add_parser('track', help='Track objects in files')
+    parser_track.add_argument('--files', type=str, help='Video files to process or folder path with images')
+    parser_track.add_argument("--conf-threshold", type=float, default=0.8, help="Object confidence threshold")
+    parser_track.add_argument("--track-points", type=str, default="bbox", help="Track points: 'centroid' or 'bbox'")
+    parser_track.add_argument("--distance-threshold", type=float, default=1.0, help="Distance threshold")
+    parser_track.add_argument("--distance-function", type=str, default="scalar", help="Distance function: scalar or iou")
+    parser_track.add_argument("--backbone", type=str, default="resnet50v2", help="Backbone for object detector")
+    parser_track.add_argument("--draw", type=bool, default=False, help="Generate video drawing")
+    parser_track.add_argument("--evalFile", type=bool, default=False, help="Generate file for evaluation")
+    parser_track.add_argument("--isVideo", type=bool, default=False, help="The path is a video")
+    parser_track.add_argument('--outputDir', type=str, default="outputFiles", help='Directory for outputs in eval mode')
+    parser_track.add_argument('--device', type=str, default="cuda:0", help='CUDA Device')
+    parser_track.add_argument('--detector', type=str, default="FasterRCNN_pretrained", help='Object Detector Model to be used')
 
-if __name__ == "__main__":
-    print("Hello World")
+def setup_player_classification_parser(subparsers):
+    """Configura el subparser para la tarea 'player_classification'."""
+    parser_player_class = subparsers.add_parser('player_classification', help='Identify the team to which each player belongs')
+    parser_player_class.add_argument('--file', type=str, help='Input image to be clustered')
+
+def setup_pass_detect(subparsers):
+    """Configura el subparser para la tarea 'task2'."""
+    parser_pass_detect = subparsers.add_parser('pass_detection', help='Main Task')
+    parser_pass_detect.add_argument('--files', type=str, help='Video files to process or folder path with images')
+    # parser_pass_detect.add_argument('--task2_arg2', type=str, help='Argument 2 for task2')
+
+def main():
+    """Main"""
     
     parser = argparse.ArgumentParser(description='Choose task to run')
+    subparsers = parser.add_subparsers(dest='task', help='Choose task to run')
 
-    # Crea los subparsers
-    subparsers = parser.add_subparsers(dest='task', help='Choose task to run'
-                                       #, default='default_task'
-                                       )
-    
-    ############ Crea el parser para la tarea "Track" ###########################
-    parser_track = subparsers.add_parser('track', help='Track objects in files')
-    parser_track.add_argument(
-        '--files', 
-        type=str, 
-        help='Video files to process or folder path with images'
-    )
-    parser_track.add_argument(
-        "--conf-threshold",
-        type=float,
-        default="0.8",
-        help="Object confidence threshold",
-    )
-    parser_track.add_argument(
-        "--track-points",
-        type=str,
-        default="bbox",
-        help="Track points: 'centroid' or 'bbox'",
-    )
-    parser_track.add_argument(
-        "--distance-threshold",
-        type=float,
-        default="1",
-        help="distance threshold",
-    )
-    parser_track.add_argument(
-        "--distance-function",
-        type=str,
-        default="scalar",
-        help="scalar or iou",
-    )
-    parser_track.add_argument(
-        "--backbone",
-        type=str,
-        default="resnet50v2",
-        help="backbone for object detector",
-    )
-    parser_track.add_argument(
-        "--draw",
-        type=bool,
-        default=0,
-        help="generate video drawing",
-    )
-    parser_track.add_argument(
-        "--evalFile",
-        type=bool,
-        default=0,
-        help="generate file for evaluation",
-    )
-    parser_track.add_argument(
-        "--isVideo",
-        type=bool,
-        default=0,
-        help="the path is a video",
-    )
-    parser_track.add_argument(
-        '--outputDir', 
-        type=str, 
-        default = "outputFiles",
-        help='Directory for outputs in eval mode'
-    )
-    parser_track.add_argument(
-        '--device', 
-        type=str, 
-        default="cuda:0",
-        help='CUDA Device'
-    )
-    parser_track.add_argument(
-        '--detector', 
-        type=str, 
-        default="FasterRCNN_pretrained",
-        help='Object Detector Model to be used'
-    )
-    
-    ############ crea el parser para la tarea "player_classification" ######################
-    parser_playerClass = subparsers.add_parser('player_classification', help='Identify the team to which each player belongs')
-    parser_playerClass.add_argument(
-        '--file', 
-        type=str, 
-        help='Input image to be clustered'
-    )
-    
-    
-    
-    # Cambiar a otras tareas
-    ############ Crea el parser para la tarea "Task23" ###########################
-    parser_task2 = subparsers.add_parser('task2', help='Help for task2')
-    parser_task2.add_argument('--task2_arg1', type=str, help='Argument 1 for task2')
-    parser_task2.add_argument('--task2_arg2', type=str, help='Argument 2 for task2')
-
-    # Crea el parser para la tarea por defecto
-    parser_default = subparsers.add_parser('default_task', help='Default task')
+    # Configura los subparsers
+    setup_track_parser(subparsers)
+    setup_player_classification_parser(subparsers)
+    setup_pass_detect(subparsers)
+    subparsers.add_parser('default_task', help='Default task')
 
     args = parser.parse_args()
 
     if args.task == 'track':
-        print(args)
-        print(args.files)
-        
         track(
             args.files, 
             args.conf_threshold,  
@@ -129,13 +61,13 @@ if __name__ == "__main__":
             args.detector,
             args.outputDir,
         )
-        
     elif args.task == 'player_classification':
-        print(args)
+        classify_players(args.file)
+    elif args.task == 'pass_detection':
+        print('Running Pass Detection')
         
-        classify_players(
-            args.file
-        )
-        
-    elif args.task == 'default_task':
-        print('Running default task')
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
