@@ -28,3 +28,4 @@ def track(input_video, conf_threshold, track_points, distance_threshold, distanc
         isVideo = isVideo,
         outputDir = outputDir
     )
+    

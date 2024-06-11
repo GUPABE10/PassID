@@ -3,7 +3,7 @@
 import argparse
 from tasks.track import track
 from tasks.team_id import classify_players
-from tasks.pass_detection import PassDetection
+from tasks.pass_detection.pass_detection import PassDetection
 
 def setup_track_parser(subparsers):
     """Configura el subparser para la tarea 'track'."""
