@@ -1,8 +1,12 @@
-class PassDetection:
-    def __init__(self):
-        # Inicialización del detector de pases
-        pass
+"""
+Escribiré un método simple que resuma todo
 
-    def detect_passes(self, tracking_data):
-        # Código para detectar pases entre jugadores
-        pass
+Recibe: 
+- directorio de videos, Imagenes
+- Frame_rate necesario para imagenes, opcional para videos para obtener las imagenes
+
+1. Inicializo Clase video con Frame_rate
+    AL incializar 
+
+
+"""
