@@ -119,7 +119,7 @@ class FasterRCNN:
             desired_classes = (labels == 1) | (labels == 2)
         else:
             # Filter for desired classes: 1 for "person", 37 for "sports ball"
-            desired_classes = (labels == 1) | (labels == 37)
+            desired_classes = (labels == 1) | (labels == 37) # NO estoy seguro si 37 es pelota o 32
         
         # if not desired_classes.any():
             # print(labels)

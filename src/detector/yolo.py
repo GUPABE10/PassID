@@ -62,7 +62,7 @@ class MyYOLODetector:
             desired_classes = (labels == 0) | (labels == 1)
         else:
             # Filtrar para clases deseadas: 1 para "persona", 37 para "sports ball"
-            desired_classes = (labels == 1) | (labels == 37)
+            desired_classes = (labels == 0) | (labels == 32)
         
         
 
@@ -80,6 +80,7 @@ class MyYOLODetector:
             filtered_labels[filtered_labels == 0] = 1
         else:
             # Reemplazar la etiqueta 37 con 2
-            filtered_labels[filtered_labels == 37] = 2
+            filtered_labels[filtered_labels == 0] = 1
+            filtered_labels[filtered_labels == 32] = 2
 
         return filtered_boxes, filtered_scores, filtered_labels

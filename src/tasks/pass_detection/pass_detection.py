@@ -10,10 +10,14 @@ Recibe:
 import numpy as np
 from tracker.base_tracker import BaseTracker
 from utils.match_info import VideoInfo, Match
+from tasks.team_id import PlayerClassifier
 
 class PassDetection(BaseTracker):
     def __init__(self):
         super().__init__()
+        
+        self.isDetectionStarted = False
+        self.match = Match()
 
     def detect_passes(self, input_path: str, model, model_threshold, distance_threshold, distance_function: str, isVideo: bool, track_points: str = None):
         video_images, height, width = self.load_images_or_video(input_path, isVideo)
@@ -22,17 +26,13 @@ class PassDetection(BaseTracker):
         tracker = self.initialize_tracker(distance_function, distance_threshold)
         
         # Incializar Clase Video
-        VideoInfo = VideoInfo(video_path = input_path)
+        self.videoInfo = VideoInfo(video_path = input_path)
         
-        # Inicializar Clase Partido
-        Match = Match()
-        
-        # Bandera de frame de inicio
-        isDetectionStarted = False
 
-        for frame_image in video_images:
+        for frame_image in video_images: 
             
-            ########### Error: Labels. Son diferentes labels si uso FasterRCNN y YOLO
+            #### Frame_image 
+            # It returns regular OpenCV frames which enables the usage of the huge number of tools OpenCV provides to modify images.
             
             # Sección de tracking original
             frame_number, frame = self.process_frame(input_path, frame_image, isVideo)
@@ -45,20 +45,31 @@ class PassDetection(BaseTracker):
 
             # Sección de detección de pases
             # aqui está pendiete saber si solo con esta condicion es suficiente para el frame de inicialización
-            if tracked_objects:
+            if tracked_objects and not self.isDetectionStarted:
                 print("Frame de inicializacion: ")
                 print(tracked_objects)
+                self.initFrame(frame_image, tracked_objects)
+                
+                
                 isDetectionStarted = True
                 
+                
             if isDetectionStarted:
-                self.detect_pass_logic(tracked_objects, frame_number)
+                self.detect_pass_logic(frame_image, tracked_objects, frame_number)
+                
+    def initFrame(self, image, tracked_objects):
+        classifier = PlayerClassifier()
+        classifier.classify(image=image, tracked_objects=tracked_objects, match=self.match, visualize=False)
 
-    def detect_pass_logic(self, tracked_objects, frame_number):
+    def detect_pass_logic(self, image, match, tracked_objects, frame_number):
         # Aqui ya cuento con jugadores detectados y balón
-        # Aplicar Cluster
-        
+        # Fase de inicialización
         
         pass
+        
+        
+        
+        
 
 
 """

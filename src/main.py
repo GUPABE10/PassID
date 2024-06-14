@@ -2,7 +2,7 @@
 
 import argparse
 from tasks.track import track
-from tasks.team_id import classify_players
+from tasks.team_id import PlayerClassifier
 from tasks.pass_detection.pass_detection import PassDetection
 
 def setup_track_parser(subparsers):
@@ -62,7 +62,9 @@ def main():
             args.outputDir,
         )
     elif args.task == 'player_classification':
-        classify_players(args.file)
+        classifier = PlayerClassifier()
+        # classifier.classify_players(args.file)
+        classifier.classify(image_path=args.file, visualize=True)
     elif args.task == 'pass_detection':
         print('Running Pass Detection')
         

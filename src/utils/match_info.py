@@ -1,6 +1,6 @@
 import cv2
 
-from utils.match_objects import Player, Ball
+from utils.match_objects import Player
 
 class VideoInfo:
     def __init__(self, video_path, frame_rate: int = 5):
