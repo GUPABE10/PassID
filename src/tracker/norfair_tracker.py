@@ -25,7 +25,7 @@ class NorfairTracker(BaseTracker):
             mask = np.ones(frame.shape[:2], frame.dtype)
 
             self.coord_transformations = motion_estimator.update(frame, mask)
-            detections = self.rcnn_detections_to_norfair_detections(model_boxes, model_scores, track_points)
+            detections = self.my_detections_to_norfair_detections(model_boxes, model_scores, model_labels, track_points)
             tracked_objects = tracker.update(detections=detections, coord_transformations=self.coord_transformations)   
 
             if evalFile:

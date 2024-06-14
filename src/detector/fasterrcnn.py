@@ -115,7 +115,7 @@ class FasterRCNN:
         labels = prediction[0]["labels"] # New
     
 
-        if self.isTuned:
+        if self.isTuned: ## 1 person # 2 ball
             desired_classes = (labels == 1) | (labels == 2)
         else:
             # Filter for desired classes: 1 for "person", 37 for "sports ball"
@@ -130,6 +130,9 @@ class FasterRCNN:
         boxes = boxes[selected_indices]
         scores = scores[selected_indices]
         labels = labels[selected_indices]
+        
+        # Replace label 37 with 2
+        labels[labels == 37] = 2
 
         return boxes, scores, labels
     

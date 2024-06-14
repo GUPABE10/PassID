@@ -70,10 +70,10 @@ class BaseTracker:
             frame_number = None
         return frame_number, frame
 
-    def rcnn_detections_to_norfair_detections(self, rcnn_boxes: torch.Tensor, rcnn_scores: torch.Tensor, track_points: str = "centroid") -> List[Detection]:
+    def my_detections_to_norfair_detections(self, my_boxes: torch.Tensor, my_scores: torch.Tensor, my_labels: torch.Tensor, track_points: str = "centroid") -> List[Detection]:
         norfair_detections: List[Detection] = []
         if track_points == "centroid":
-            for box, score in zip(rcnn_boxes, rcnn_scores):
+            for box, score, label in zip(my_boxes, my_scores, my_labels):
                 centroid = np.array(
                     [
                         [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2],
@@ -81,9 +81,9 @@ class BaseTracker:
                     ]
                 )
                 scores = np.array([score.item(), score.item()])
-                norfair_detections.append(Detection(points=centroid, scores=scores))
+                norfair_detections.append(Detection(points=centroid, scores=scores, label=label.item()))
         elif track_points == "bbox":
-            for box, score in zip(rcnn_boxes, rcnn_scores):
+            for box, score, label in zip(my_boxes, my_scores, my_labels):
                 bbox = np.array(
                     [
                         [box[0].item(), box[1].item()],
@@ -91,7 +91,7 @@ class BaseTracker:
                     ]
                 )
                 scores = np.array([score.item(), score.item()])
-                norfair_detections.append(Detection(points=bbox, scores=scores))
+                norfair_detections.append(Detection(points=bbox, scores=scores, label=label.item()))
         return norfair_detections
 
     def draw_frame(self, track_points, frame, detections, tracked_objects):
