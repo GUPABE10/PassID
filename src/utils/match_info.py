@@ -1,6 +1,6 @@
 import cv2
 
-from utils.match_objects import Player
+from utils.match_objects import Player, Ball
 
 class VideoInfo:
     def __init__(self, video_path, frame_rate: int = 5):
@@ -29,10 +29,40 @@ class VideoInfo:
 class Match:
     def __init__(self):
         self.players = {}
-        # self.ball = None
+        self.extras = set() # Evita Duplicidad
+        self.ball = None
 
     def add_player(self, player_id, team):
         self.players[player_id] = Player(player_id, team)
+        
+    def add_extra_people(self, extra_id):
+        self.extras.add(extra_id)
+        
+    def assignBall(self, ball_id):
+        self.ball = Ball(ball_id)
+    
+        
+    def assign_ball_to_match(self, tracked_objects):
+        ball_ids = [obj.id for obj in tracked_objects if obj.label == 2]
+        
+        if self.ball is None:
+            # Caso cuando no hay ninguna pelota asignada previamente
+            if len(ball_ids) == 1:
+                self.assignBall(ball_id=ball_ids[0])
+            elif len(ball_ids) > 1:
+                self.assignBall(ball_id=0)
+        else:
+            # Caso cuando ya hay una pelota asignada
+            current_ball_id = self.ball.id
+            if len(ball_ids) == 1:
+                if ball_ids[0] != current_ball_id:
+                    self.assignBall(ball_id=ball_ids[0])
+            elif len(ball_ids) > 1:
+                # Si hay más de una pelota detectada, se mantiene la pelota actual
+                pass
+            elif len(ball_ids) == 0:
+                # Si no se detecta ninguna pelota, se podría decidir si se debe hacer algo
+                pass
 
     def __str__(self):
         players_str = "\n".join(str(player) for player in self.players.values())
