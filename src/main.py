@@ -30,7 +30,16 @@ def setup_pass_detect(subparsers):
     """Configura el subparser para la tarea 'task2'."""
     parser_pass_detect = subparsers.add_parser('pass_detection', help='Main Task')
     parser_pass_detect.add_argument('--files', type=str, help='Video files to process or folder path with images')
-    # parser_pass_detect.add_argument('--task2_arg2', type=str, help='Argument 2 for task2')
+    parser_pass_detect.add_argument("--conf-threshold", type=float, default=0.8, help="Object confidence threshold")
+    parser_pass_detect.add_argument("--track-points", type=str, default="bbox", help="Track points: 'centroid' or 'bbox'")
+    parser_pass_detect.add_argument("--distance-threshold", type=float, default=1.0, help="Distance threshold")
+    # Originalmente funcionaba con default= "scalar"
+    parser_pass_detect.add_argument("--distance-function", type=str, default="scalar" , help="Distance function: scalar or iou")
+    parser_pass_detect.add_argument("--backbone", type=str, default="resnet50v2", help="Backbone for object detector")
+    parser_pass_detect.add_argument("--isVideo", type=bool, default=False, help="The path is a video")
+    parser_pass_detect.add_argument('--device', type=str, default="cuda:0", help='CUDA Device')
+    parser_pass_detect.add_argument('--detector', type=str, default="FasterRCNN_pretrained", help='Object Detector Model to be used')
+    parser_pass_detect.add_argument("--testMode", type=bool, default=False, help="For printing and save images")
 
 def main():
     """Main"""
@@ -67,6 +76,21 @@ def main():
         classifier.classify(image_path=args.file, visualize=True)
     elif args.task == 'pass_detection':
         print('Running Pass Detection')
+        pass_detection = PassDetection(
+            args.files,
+            args.conf_threshold,  
+            args.track_points,
+            args.distance_threshold,
+            args.distance_function,
+            args.backbone,
+            # args.draw,
+            # args.evalFile,
+            args.isVideo,
+            args.device,
+            args.detector,
+            args.testMode,
+        )
+        pass_detection.detect_passes()
         
     else:
         parser.print_help()

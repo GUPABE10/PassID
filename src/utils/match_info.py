@@ -64,10 +64,24 @@ class Match:
                 # Si no se detecta ninguna pelota, se podría decidir si se debe hacer algo
                 pass
 
+    # def __str__(self):
+    #     players_str = "\n".join(str(player) for player in self.players.values())
+    #     # ball_str = str(self.ball)
+    #     return f"Match(\nPlayers:\n{players_str})"
+    
     def __str__(self):
-        players_str = "\n".join(str(player) for player in self.players.values())
-        # ball_str = str(self.ball)
-        return f"Match(\nPlayers:\n{players_str})"
+        players_str = ', '.join(
+            f"Player(id={player.id}, team={player.team})" 
+            for player in self.players.values()
+        )
+        extras_str = ', '.join(str(extra) for extra in self.extras)
+        ball_str = f"Ball(id={self.ball.id}, inPossession={self.ball.inPossession})" if self.ball else "No ball"
+        
+        return (f"Match(\n"
+                f"  Players: [{players_str}],\n"
+                f"  Extras Ids: [{extras_str}],\n"
+                f"  Ball: {ball_str}\n"
+                f")")
 
 
 
