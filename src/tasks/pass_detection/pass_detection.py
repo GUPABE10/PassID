@@ -14,6 +14,7 @@ from tasks.team_id import PlayerClassifier
 
 from detector.fasterrcnn import FasterRCNN
 from detector.yolo import MyYOLODetector
+from detector.maskrcnn import MaskRCNN
 
 class PassDetection(BaseTracker):
     def __init__(self, input_path: str, 
@@ -48,6 +49,8 @@ class PassDetection(BaseTracker):
             self.model = FasterRCNN(detector, backbone = backboneModel, device = device)
         elif "yolo" in detector:
             self.model = MyYOLODetector(detector, device)
+        elif "MaskRCNN" in detector:
+            self.model = MaskRCNN(detector, device=device)
         else:
             print("Unknown model")
 

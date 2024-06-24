@@ -25,7 +25,7 @@ def get_finetuned_model(cfg):
     return DefaultPredictor(cfg)
 
 class MaskRCNN:
-    def __init__(self, model, backbone, device: Optional[str] = None):
+    def __init__(self, model, device: Optional[str] = None):
         if device is not None and "cuda" in device and not torch.cuda.is_available():
             raise Exception(
                 "Selected device='cuda', but cuda is not available to Pytorch."

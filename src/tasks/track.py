@@ -1,6 +1,8 @@
 from detector.fasterrcnn import FasterRCNN
 from detector.yolo import MyYOLODetector
+from detector.maskrcnn import MaskRCNN
 from tracker.norfair_tracker import NorfairTracker
+
 
 
 def track(input_video, conf_threshold, track_points, distance_threshold, distance_function, backboneModel, draw, evalFile, isVideo, device, detector, outputDir):
@@ -10,6 +12,8 @@ def track(input_video, conf_threshold, track_points, distance_threshold, distanc
         modelDetector = FasterRCNN(detector, backbone = backboneModel, device = device)
     elif "yolo" in detector:
         modelDetector = MyYOLODetector(detector, device)
+    elif "MaskRCNN" in detector:
+        modelDetector = MaskRCNN(detector, device)
     else:
         print("Unknown model")
     
