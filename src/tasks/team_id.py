@@ -43,6 +43,136 @@ class PlayerClassifier:
         
         iou = interArea / float(boxAArea + boxBArea - interArea)
         return iou
+    
+    def testingImage(self,image):
+        # print(image.shape)
+        print(image.dtype, image.min(), image.max())
+        plt.figure(figsize=(10, 10))
+        plt.imshow(image)
+        # plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        plt.axis('off')
+        plt.title('Original Image')
+        plt.savefig('image_analized.png')
+        plt.show()
+        # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        image_pt = cv2.imread("frame_7.jpg")
+        print(image_pt.dtype, image_pt.min(), image_pt.max())
+
+        if image.shape != image_pt.shape:
+            raise ValueError("Las imágenes deben tener el mismo tamaño y número de canales")
+
+        if np.array_equal(image, image_pt):
+            print("SON IGUALES")
+        else:
+            print("NO SON IGUALES")
+
+        if np.allclose(image, image_pt, atol=1e-5):
+            print("MEDIO IGUALES")
+        else:
+            print("MEDIO NO SON IGUALES")
+
+        difference = cv2.absdiff(image, image_pt)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(cv2.cvtColor(difference, cv2.COLOR_BGR2RGB))
+        plt.axis('off')
+        plt.title('Diferencias entre imágenes')
+        plt.savefig('Diferencias.png')
+        plt.show()
+
+        hist1 = cv2.calcHist([image], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
+        hist2 = cv2.calcHist([image_pt], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
+        similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+        print(f"El índice de similitud de los histogramas es {similarity}")
+
+        image1_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image2_gray = cv2.cvtColor(image_pt, cv2.COLOR_BGR2GRAY)
+        score, diff = ssim(image1_gray, image2_gray, full=True)
+        diff = (diff * 255).astype("uint8")
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(diff, cmap='gray')
+        plt.axis('off')
+        plt.title('Diferencias usando SSIM')
+        plt.savefig('Diferencias_SSIM.png')
+        plt.show()
+        print(f"El índice SSIM entre las imágenes es {score}")
+
+        # image = cv2.imread("frame_7.jpg")
+
+        colors = ('b', 'g', 'r')
+        plt.figure(figsize=(20, 10))
+
+        for i, color in enumerate(colors):
+            hist1 = cv2.calcHist([image], [i], None, [256], [0, 256])
+            hist2 = cv2.calcHist([image_pt], [i], None, [256], [0, 256])
+            plt.subplot(1, 3, i+1)
+            plt.plot(hist1, color=color, label='Image 1')
+            plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
+            plt.title(f'Histogram for {color.upper()} channel')
+            plt.xlabel('Pixel value')
+            plt.ylabel('Frequency')
+            plt.legend()
+        plt.savefig('Histogramas.png')
+        plt.tight_layout()
+        plt.show()
+
+        def compare_histograms_detailed(image1, image2):
+            colors = ('b', 'g', 'r')
+            plt.figure(figsize=(20, 10))
+            
+            for i, color in enumerate(colors):
+                hist1 = cv2.calcHist([image1], [i], None, [256], [0, 256])
+                hist2 = cv2.calcHist([image2], [i], None, [256], [0, 256])
+                
+                diff_hist = hist1 - hist2
+                
+                plt.subplot(1, 3, i+1)
+                plt.plot(hist1, color=color, label='Image 1')
+                plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
+                plt.plot(diff_hist, color='black', linestyle='dotted', label='Difference')
+                plt.title(f'Histogram Comparison for {color.upper()} channel')
+                plt.xlabel('Pixel value')
+                plt.ylabel('Frequency')
+                plt.legend()
+            
+            plt.tight_layout()
+            plt.savefig('Histogramas_detallado.png')
+            plt.show()
+        # Ejemplo de uso
+        compare_histograms_detailed(image, image_pt)
+
+
+        def highlight_differences(image1, image2, threshold=30):
+            # Calcula la diferencia absoluta entre las imágenes
+            difference = cv2.absdiff(image1, image2)
+            gray_diff = cv2.cvtColor(difference, cv2.COLOR_BGR2GRAY)
+            
+            # Aplica un umbral para resaltar las diferencias significativas
+            _, mask = cv2.threshold(gray_diff, threshold, 255, cv2.THRESH_BINARY)
+            
+            # Colorea las diferencias en la imagen original
+            diff_highlight = image1.copy()
+            diff_highlight[mask != 0] = [0, 0, 255]  # Resaltar diferencias en rojo
+            return diff_highlight, mask
+
+        # Ejemplo de uso
+        diff_highlight, mask = highlight_differences(image, image_pt)
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(cv2.cvtColor(diff_highlight, cv2.COLOR_BGR2RGB))
+        plt.axis('off')
+        plt.title('Diferencias resaltadas en rojo')
+        plt.savefig('Dif_rojo.png')
+        plt.show()
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(mask, cmap='gray')
+        plt.axis('off')
+        plt.title('Máscara de diferencias')
+        plt.savefig('Dif_mask.png')
+        plt.show()
+        pass
 
     def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False):
 
@@ -65,133 +195,7 @@ class PlayerClassifier:
             cv2.imwrite("tempImage.jpg", image)
             image = cv2.imread("tempImage.jpg")
 
-            # print(image.shape)
-            # print(image.dtype, image.min(), image.max())
-            # plt.figure(figsize=(10, 10))
-            # plt.imshow(image)
-            # # plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            # plt.axis('off')
-            # plt.title('Original Image')
-            # plt.savefig('image_analized.png')
-            # plt.show()
-            # # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            # image_pt = cv2.imread("frame_7.jpg")
-            # print(image_pt.dtype, image_pt.min(), image_pt.max())
-
-            # if image.shape != image_pt.shape:
-            #     raise ValueError("Las imágenes deben tener el mismo tamaño y número de canales")
-
-            # if np.array_equal(image, image_pt):
-            #     print("SON IGUALES")
-            # else:
-            #     print("NO SON IGUALES")
-
-            # if np.allclose(image, image_pt, atol=1e-5):
-            #     print("MEDIO IGUALES")
-            # else:
-            #     print("MEDIO NO SON IGUALES")
-
-            # difference = cv2.absdiff(image, image_pt)
-            # plt.figure(figsize=(10, 10))
-            # plt.imshow(cv2.cvtColor(difference, cv2.COLOR_BGR2RGB))
-            # plt.axis('off')
-            # plt.title('Diferencias entre imágenes')
-            # plt.savefig('Diferencias.png')
-            # plt.show()
-
-            # hist1 = cv2.calcHist([image], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-            # hist2 = cv2.calcHist([image_pt], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-            # similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-            # print(f"El índice de similitud de los histogramas es {similarity}")
-
-            # image1_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            # image2_gray = cv2.cvtColor(image_pt, cv2.COLOR_BGR2GRAY)
-            # score, diff = ssim(image1_gray, image2_gray, full=True)
-            # diff = (diff * 255).astype("uint8")
-
-            # plt.figure(figsize=(10, 10))
-            # plt.imshow(diff, cmap='gray')
-            # plt.axis('off')
-            # plt.title('Diferencias usando SSIM')
-            # plt.savefig('Diferencias_SSIM.png')
-            # plt.show()
-            # print(f"El índice SSIM entre las imágenes es {score}")
-
-            # # image = cv2.imread("frame_7.jpg")
-
-            # colors = ('b', 'g', 'r')
-            # plt.figure(figsize=(20, 10))
-
-            # for i, color in enumerate(colors):
-            #     hist1 = cv2.calcHist([image], [i], None, [256], [0, 256])
-            #     hist2 = cv2.calcHist([image_pt], [i], None, [256], [0, 256])
-            #     plt.subplot(1, 3, i+1)
-            #     plt.plot(hist1, color=color, label='Image 1')
-            #     plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
-            #     plt.title(f'Histogram for {color.upper()} channel')
-            #     plt.xlabel('Pixel value')
-            #     plt.ylabel('Frequency')
-            #     plt.legend()
-            # plt.savefig('Histogramas.png')
-            # plt.tight_layout()
-            # plt.show()
-
-            # def compare_histograms_detailed(image1, image2):
-            #     colors = ('b', 'g', 'r')
-            #     plt.figure(figsize=(20, 10))
-                
-            #     for i, color in enumerate(colors):
-            #         hist1 = cv2.calcHist([image1], [i], None, [256], [0, 256])
-            #         hist2 = cv2.calcHist([image2], [i], None, [256], [0, 256])
-                    
-            #         diff_hist = hist1 - hist2
-                    
-            #         plt.subplot(1, 3, i+1)
-            #         plt.plot(hist1, color=color, label='Image 1')
-            #         plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
-            #         plt.plot(diff_hist, color='black', linestyle='dotted', label='Difference')
-            #         plt.title(f'Histogram Comparison for {color.upper()} channel')
-            #         plt.xlabel('Pixel value')
-            #         plt.ylabel('Frequency')
-            #         plt.legend()
-                
-            #     plt.tight_layout()
-            #     plt.savefig('Histogramas_detallado.png')
-            #     plt.show()
-            # # Ejemplo de uso
-            # compare_histograms_detailed(image, image_pt)
-
-
-            # def highlight_differences(image1, image2, threshold=30):
-            #     # Calcula la diferencia absoluta entre las imágenes
-            #     difference = cv2.absdiff(image1, image2)
-            #     gray_diff = cv2.cvtColor(difference, cv2.COLOR_BGR2GRAY)
-                
-            #     # Aplica un umbral para resaltar las diferencias significativas
-            #     _, mask = cv2.threshold(gray_diff, threshold, 255, cv2.THRESH_BINARY)
-                
-            #     # Colorea las diferencias en la imagen original
-            #     diff_highlight = image1.copy()
-            #     diff_highlight[mask != 0] = [0, 0, 255]  # Resaltar diferencias en rojo
-            #     return diff_highlight, mask
-
-            # # Ejemplo de uso
-            # diff_highlight, mask = highlight_differences(image, image_pt)
-
-            # plt.figure(figsize=(10, 10))
-            # plt.imshow(cv2.cvtColor(diff_highlight, cv2.COLOR_BGR2RGB))
-            # plt.axis('off')
-            # plt.title('Diferencias resaltadas en rojo')
-            # plt.savefig('Dif_rojo.png')
-            # plt.show()
-
-            # plt.figure(figsize=(10, 10))
-            # plt.imshow(mask, cmap='gray')
-            # plt.axis('off')
-            # plt.title('Máscara de diferencias')
-            # plt.savefig('Dif_mask.png')
-            # plt.show()
+            
         else:
             raise ValueError("Se debe proporcionar una imagen o una ruta de imagen.")
         
@@ -206,6 +210,7 @@ class PlayerClassifier:
         
         if visualize:
             self.visualize_instances(image, person_instances)
+            self.visualize_instances(image, instances)
 
         # Calcular histogramas para cada persona detectada
         histograms = []
@@ -219,13 +224,17 @@ class PlayerClassifier:
         labels = clusterer.fit_predict(histograms)
         print(labels)
         
-        # Encontrar los dos clusters más grandes
+        # Encontrar los dos clusters más grandes omitiendo el label -1
         unique_labels, counts = np.unique(labels, return_counts=True)
+        valid_indices = unique_labels != -1
+        unique_labels = unique_labels[valid_indices]
+        counts = counts[valid_indices]
         sorted_indices = np.argsort(counts)[::-1]
         top_two_clusters = unique_labels[sorted_indices[:2]]
 
         if visualize:
             self.visualize_clusters(image, person_instances, labels)
+            self.visualize_tracked_objects(image, tracked_objects)
 
         if tracked_objects and match:
             return self.assign_clusters_to_tracked_objects(person_instances, labels, tracked_objects, match, top_two_clusters)
@@ -264,6 +273,30 @@ class PlayerClassifier:
 
         return match
 
+
+    
+    def visualize_tracked_objects(self, image, tracked_objects):
+        # Copiar la imagen original para dibujar las bounding boxes
+        bounding_box_image = image.copy()
+
+        # Dibujar las bounding boxes y los IDs de los objetos seguidos
+        for obj in tracked_objects:
+            x1, y1, x2, y2 = map(int, obj.estimate.flatten().tolist())
+            color = (0, 255, 0)  # Verde para las bounding boxes de los objetos seguidos
+            cv2.rectangle(bounding_box_image, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(bounding_box_image, f'ID: {obj.id}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        # Convertir la imagen de BGR a RGB para visualizarla correctamente con matplotlib
+        bounding_box_image_rgb = cv2.cvtColor(bounding_box_image, cv2.COLOR_BGR2RGB)
+        
+        # Mostrar la imagen con las bounding boxes y los IDs
+        plt.figure(figsize=(10, 10))
+        plt.imshow(bounding_box_image_rgb)
+        plt.axis('off')
+        plt.title('Tracked Objects with IDs')
+        plt.savefig('tracked_objects_with_ids.png')
+        plt.show()
+
     def visualize_clusters(self, image, person_instances, labels):
         colors = plt.cm.get_cmap('tab10', np.max(labels) + 1)
         bounding_box_image = image.copy()
@@ -281,6 +314,8 @@ class PlayerClassifier:
         plt.title('Bounding Box Image with Cluster Colors')
         plt.savefig('result_image_with_clusters.png')
         plt.show()
+
+
 
 # Ejemplo de uso de la clase
 # classifier = PlayerClassifier()

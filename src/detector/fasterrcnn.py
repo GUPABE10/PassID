@@ -48,7 +48,7 @@ class FasterRCNN:
             )
         # automatically set device if its None
         elif device is None:
-            device = "cuda:2" if torch.cuda.is_available() else "cpu"
+            device = "cuda:0" if torch.cuda.is_available() else "cpu"
         
         print(device)
 

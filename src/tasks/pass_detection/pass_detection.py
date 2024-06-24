@@ -135,26 +135,34 @@ class PassDetection(BaseTracker):
             print("Mismos objetos? Debería ser True:")
             print(self.verify_tracked_objects(tracked_objects))
             return
+        
+        missing_ids = self.verify_tracked_objects(tracked_objects)
 
-        if not self.verify_tracked_objects(tracked_objects):
+        if missing_ids:
             # Aqui puede haber un error si un jugador previamente se asignó a un equipo y después el cluster lo canbia por otro
             # return
-            self.assign_objects(image, tracked_objects)
+            # self.assign_objects(image, tracked_objects)
+            pass
             
         
-    # Esta funcion es para verificar que todos los tracked_objects esten en match, y verificar si hay nuevos
-    def verify_tracked_objects(self,tracked_objects):
+    # Esta función es para verificar que todos los tracked_objects estén en match, y verificar si hay nuevos
+    def verify_tracked_objects(self, tracked_objects):
         # Obtenemos los ids de players, extras y ball (si no es None)
         player_ids = set(self.match.players.keys())
         extra_ids = self.match.extras
         ball_id = self.match.ball.id if self.match.ball is not None else None
 
+        # Conjunto para almacenar los IDs que no están presentes
+        missing_ids = set()
+
         # Verificamos que cada id en tracked_objects esté en players, extras o ball
         for obj in tracked_objects:
             obj_id = obj.id
             if obj_id not in player_ids and obj_id not in extra_ids and obj_id != ball_id:
-                return False
-        return True
+                missing_ids.add(obj_id)
+
+        return missing_ids
+
         
 
 
