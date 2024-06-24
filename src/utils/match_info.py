@@ -57,12 +57,12 @@ class Match:
             if len(ball_ids) == 1:
                 if ball_ids[0] != current_ball_id:
                     self.assignBall(ball_id=ball_ids[0])
-            elif len(ball_ids) > 1:
-                # Si hay más de una pelota detectada, se mantiene la pelota actual
-                pass
-            elif len(ball_ids) == 0:
-                # Si no se detecta ninguna pelota, se podría decidir si se debe hacer algo
-                pass
+            # elif len(ball_ids) > 1:
+            #     # Si hay más de una pelota detectada, se mantiene la pelota actual
+            #     pass
+            # elif len(ball_ids) == 0:
+            #     # Si no se detecta ninguna pelota, se podría decidir si se debe hacer algo
+            #     pass
 
     # def __str__(self):
     #     players_str = "\n".join(str(player) for player in self.players.values())

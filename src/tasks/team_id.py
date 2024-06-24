@@ -174,7 +174,7 @@ class PlayerClassifier:
         plt.show()
         pass
 
-    def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False):
+    def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False, missing_ids=set(), frame_number=0):
 
         # Lectura de imagen por path
         if image_path:
@@ -233,11 +233,11 @@ class PlayerClassifier:
         top_two_clusters = unique_labels[sorted_indices[:2]]
 
         if visualize:
-            self.visualize_clusters(image, person_instances, labels)
-            self.visualize_tracked_objects(image, tracked_objects)
+            self.visualize_clusters(image, person_instances, labels, frame_number)
+            self.visualize_tracked_objects(image, tracked_objects, frame_number)
 
         if tracked_objects and match:
-            return self.assign_clusters_to_tracked_objects(person_instances, labels, tracked_objects, match, top_two_clusters)
+            return self.assign_clusters_to_tracked_objects(person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids)
         
         
 
@@ -252,30 +252,119 @@ class PlayerClassifier:
         plt.savefig('Segmentacion.png')
         plt.show()
 
-    def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters):
-        for obj in tracked_objects:
-            x1, y1, x2, y2 = obj.estimate.flatten().tolist()
-            obj_box = [x1, y1, x2, y2]
-            max_iou = 0
-            assigned_cluster = -1
+    # def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters):
+    #     for obj in tracked_objects:
+    #         x1, y1, x2, y2 = obj.estimate.flatten().tolist()
+    #         obj_box = [x1, y1, x2, y2]
+    #         max_iou = 0
+    #         assigned_cluster = -1
             
-            for i in range(len(person_instances)):
-                box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
-                iou = self.calculate_iou(obj_box, box)
-                if iou > max_iou:
-                    max_iou = iou
-                    assigned_cluster = labels[i]
+    #         for i in range(len(person_instances)):
+    #             box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
+    #             iou = self.calculate_iou(obj_box, box)
+    #             if iou > max_iou:
+    #                 max_iou = iou
+    #                 assigned_cluster = labels[i]
             
-            if assigned_cluster in top_two_clusters:
-                match.add_player(player_id=obj.id, team=assigned_cluster)
-            else: 
-                match.add_extra_people(extra_id=obj.id)
+    #         if assigned_cluster in top_two_clusters:
+    #             match.add_player(player_id=obj.id, team=assigned_cluster)
+    #         else: 
+    #             match.add_extra_people(extra_id=obj.id)
+
+    #     return match
+
+    def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids):
+        # Obtenemos los IDs de los jugadores existentes
+        player_ids = set(match.players.keys())
+
+
+        if len(player_ids) == 0:
+            print("Esto solo se debe de imprimir una sola vez")
+            # Si no hay jugadores existentes, seguimos la lógica original
+            for obj in tracked_objects:
+                x1, y1, x2, y2 = obj.estimate.flatten().tolist()
+                obj_box = [x1, y1, x2, y2]
+                max_iou = 0
+                assigned_cluster = -1
+                
+                for i in range(len(person_instances)):
+                    box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
+                    iou = self.calculate_iou(obj_box, box)
+                    if iou > max_iou:
+                        max_iou = iou
+                        assigned_cluster = labels[i]
+                
+                if assigned_cluster in top_two_clusters:
+                    match.add_player(player_id=obj.id, team=assigned_cluster)
+                else:
+                    match.add_extra_people(extra_id=obj.id)
+        else:
+            # Crear un diccionario para mapear los clústeres a los equipos existentes
+            print("Previous Players")
+            print(match)
+            cluster_to_team = {}
+            for player_id in player_ids:
+                player = match.players[player_id]
+                team_number = player.team
+                assigned_cluster = self.get_cluster_for_player(player_id, labels, tracked_objects, person_instances, top_two_clusters)  # Asumimos que existe esta función
+                print(f"PlayerId = {player_id}, team = {team_number}, ActualCluster = {assigned_cluster}")
+                if assigned_cluster is not None:
+                    # ! Test de cluster permanente
+                    if assigned_cluster in cluster_to_team:
+                        if cluster_to_team[assigned_cluster] != team_number:
+                            raise ValueError(f"Conflict: Cluster {assigned_cluster} is assigned to multiple teams.")
+                    else:
+                        cluster_to_team[assigned_cluster] = team_number
+            # cluster_to_team = {actual_cluster: team_assigned_previous}
+            print(cluster_to_team)
+            
+            # Verificamos si missing_ids no está vacío
+            if missing_ids:
+                for obj in tracked_objects:
+                    if obj.id in missing_ids:
+                        assigned_cluster = self.get_cluster_for_object(obj, labels, tracked_objects, person_instances)
+                        if assigned_cluster in cluster_to_team:
+                            team_number = cluster_to_team[assigned_cluster]
+                            match.add_player(player_id=obj.id, team=team_number)
+                        else:
+                            match.add_extra_people(extra_id=obj.id)
+            
 
         return match
 
+    # Función para obtener el clúster asignado a un jugador existente (suponiendo que se basa en la IoU)
+    def get_cluster_for_player(self, player_id, labels, tracked_objects, person_instances, top_two_clusters):
+        # Lógica para determinar el clúster de un jugador existente
+        for obj in tracked_objects:
+            if obj.id == player_id:
+                x1, y1, x2, y2 = obj.estimate.flatten().tolist()
+                obj_box = [x1, y1, x2, y2]
+                for i in range(len(person_instances)):
+                    box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
+                    iou = self.calculate_iou(obj_box, box)
+                    if iou > 0:  # Asumimos que cualquier superposición es suficiente
+                        assigned_cluster = labels[i]
+                        if assigned_cluster in top_two_clusters:
+                            return labels[i]
+        return None
+
+    # Función para obtener el clúster asignado a un nuevo objeto
+    def get_cluster_for_object(self, obj, labels, tracked_objects, person_instances):
+        x1, y1, x2, y2 = obj.estimate.flatten().tolist()
+        obj_box = [x1, y1, x2, y2]
+        max_iou = 0
+        assigned_cluster = -1
+        for i in range(len(person_instances)):
+            box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
+            iou = self.calculate_iou(obj_box, box)
+            if iou > max_iou:
+                max_iou = iou
+                assigned_cluster = labels[i]
+        return assigned_cluster
+
 
     
-    def visualize_tracked_objects(self, image, tracked_objects):
+    def visualize_tracked_objects(self, image, tracked_objects,frame_number):
         # Copiar la imagen original para dibujar las bounding boxes
         bounding_box_image = image.copy()
 
@@ -294,10 +383,10 @@ class PlayerClassifier:
         plt.imshow(bounding_box_image_rgb)
         plt.axis('off')
         plt.title('Tracked Objects with IDs')
-        plt.savefig('tracked_objects_with_ids.png')
+        plt.savefig(f"{frame_number}_tracked_objects_with_ids.png")
         plt.show()
 
-    def visualize_clusters(self, image, person_instances, labels):
+    def visualize_clusters(self, image, person_instances, labels, frame_number):
         colors = plt.cm.get_cmap('tab10', np.max(labels) + 1)
         bounding_box_image = image.copy()
         for i in range(len(person_instances)):
@@ -312,7 +401,7 @@ class PlayerClassifier:
         plt.imshow(cv2.cvtColor(bounding_box_image, cv2.COLOR_BGR2RGB))
         plt.axis('off')
         plt.title('Bounding Box Image with Cluster Colors')
-        plt.savefig('result_image_with_clusters.png')
+        plt.savefig(f'{frame_number}_result_image_with_clusters.png')
         plt.show()
 
 

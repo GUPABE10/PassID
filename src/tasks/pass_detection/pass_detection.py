@@ -68,6 +68,9 @@ class PassDetection(BaseTracker):
         self.videoInfo = VideoInfo(video_path = input_path)
 
 
+        self.stop = False
+
+
 
     def detect_passes(self):
 
@@ -97,7 +100,10 @@ class PassDetection(BaseTracker):
                 print(tracked_objects)
                 # ! Test: visualize_cluster = True
                 # Visualize cluster me permitirá ver que se hace bien la clusterización
-                self.assign_objects(frame_image, tracked_objects, self.testMode)
+
+
+                missing_ids = self.verify_tracked_objects(tracked_objects)
+                self.assign_objects(frame_image, tracked_objects, self.testMode,  missing_ids, frame_number)
                 
                 self.isDetectionStarted = True
                 
@@ -105,13 +111,16 @@ class PassDetection(BaseTracker):
             if self.isDetectionStarted:
                 print("Detect Pass Logic")
                 self.detect_pass_logic(frame_image, tracked_objects, frame_number)
-                break
+                # break
+
+                if self.stop:
+                    break
         
         print("Finalizado")
                 
-    def assign_objects(self, image, tracked_objects, visualize_cluster):
+    def assign_objects(self, image, tracked_objects, visualize_cluster, missing_ids, frame_number):
         # Aqui se puede hacer una prueba de funcionamiento para verificar que se hace bien
-        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=visualize_cluster)
+        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=visualize_cluster, missing_ids = missing_ids, frame_number = frame_number)
         print("After Classify")
         print(self.match)
 
@@ -135,17 +144,22 @@ class PassDetection(BaseTracker):
         # Para esto puedo verificar tanto en players como en extra
 
         if self.testMode:
-            print("Mismos objetos? Debería ser True:")
-            print(self.verify_tracked_objects(tracked_objects))
-            return
+            # print("Mismos objetos? Debería ser Set():")
+            # print(self.verify_tracked_objects(tracked_objects))
+            # # return
+            pass
         
         missing_ids = self.verify_tracked_objects(tracked_objects)
+        print(f"Nuevos ids: {missing_ids}")
 
         if missing_ids:
             # Aqui puede haber un error si un jugador previamente se asignó a un equipo y después el cluster lo canbia por otro
             # return
-            # self.assign_objects(image, tracked_objects)
-            pass
+            self.assign_objects(image, tracked_objects, self.testMode,  missing_ids, frame_number)
+            print("After new objects: ")
+            print(self.match)
+            self.stop = True
+            
             
         
     # Esta función es para verificar que todos los tracked_objects estén en match, y verificar si hay nuevos
