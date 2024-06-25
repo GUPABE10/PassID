@@ -8,6 +8,7 @@ Recibe:
 
 """
 import numpy as np
+import cv2
 from tracker.base_tracker import BaseTracker
 from utils.match_info import VideoInfo, Match
 from tasks.team_id import PlayerClassifier
@@ -46,6 +47,9 @@ class PassDetection(BaseTracker):
         # self.detector = detector
         self.testMode = testMode
 
+        if self.testMode:
+            self.paths_drawer = self.initialize_paths_drawer()
+
         if "FasterRCNN" in detector:
             self.model = FasterRCNN(detector, backbone = backboneModel, device = device)
         elif "yolo" in detector:
@@ -81,6 +85,8 @@ class PassDetection(BaseTracker):
 
         frame_number = 1
 
+        
+
         for frame_image in self.video_images: 
             
             #### Frame_image 
@@ -92,35 +98,39 @@ class PassDetection(BaseTracker):
             model_boxes, model_scores, model_labels = self.model.predict(frame, conf_threshold=self.conf_threshold)
             mask = np.ones(frame.shape[:2], frame.dtype)
 
-            coord_transformations = self.motion_estimator.update(frame, mask)
+            self.coord_transformations = self.motion_estimator.update(frame, mask)
+            # print(f"Primera: {self.coord_transformations}")
             detections = self.my_detections_to_norfair_detections(model_boxes, model_scores, model_labels, self.track_points)
-            tracked_objects = self.tracker.update(detections=detections, coord_transformations=coord_transformations)
+            tracked_objects = self.tracker.update(detections=detections, coord_transformations=self.coord_transformations)
 
             # Sección de detección de pases
 
             # Sección de frame de inicializacion
-            # aqui está pendiete saber si solo con esta condicion es suficiente para el frame de inicialización
             # print(tracked_objects)
             if tracked_objects and not self.isDetectionStarted:
                 print("Frame de inicializacion: ")
                 print(tracked_objects)
                 # ! Test: visualize_cluster = True
                 # Visualize cluster me permitirá ver que se hace bien la clusterización
-
-
                 missing_ids = self.verify_tracked_objects(tracked_objects)
                 self.assign_objects(frame_image, tracked_objects, self.testMode,  missing_ids, frame_number)
                 
                 self.isDetectionStarted = True
+                print(self.match)
                 
                 
             if self.isDetectionStarted:
-                print("Detect Pass Logic")
+                # print("Detect Pass Logic")
                 self.detect_pass_logic(frame_image, tracked_objects, frame_number)
                 # break
 
-                if self.stop:
-                    break
+            if self.testMode:
+                frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
+                frame = self.draw_ball_possession(frame, tracked_objects)
+                self.video_images.write(frame)
+
+            if self.stop:
+                break
                 
             frame_number+=1
         
@@ -128,13 +138,13 @@ class PassDetection(BaseTracker):
                 
     def assign_objects(self, image, tracked_objects, visualize_cluster, missing_ids, frame_number):
         # Aqui se puede hacer una prueba de funcionamiento para verificar que se hace bien
-        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=visualize_cluster, missing_ids = missing_ids, frame_number = frame_number)
-        print("After Classify")
-        print(self.match)
+        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=False, missing_ids = missing_ids, frame_number = frame_number)
+        # print("After Classify")
+        # print(self.match)
 
         self.match.assign_ball_to_match(tracked_objects)
-        print("After assign Ball")
-        print(self.match)
+        # print("After assign Ball")
+        # print(self.match)
         
 
     def detect_pass_logic(self, image, tracked_objects, frame_number):
@@ -148,27 +158,21 @@ class PassDetection(BaseTracker):
         """
         # Fase de inicialización
         
-        # Verificar que todos los tracked objects estén en match, incluyendo el balón.
-        # Para esto puedo verificar tanto en players como en extra
-
-        if self.testMode:
-            # print("Mismos objetos? Debería ser Set():")
-            # print(self.verify_tracked_objects(tracked_objects))
-            # # return
-            pass
-        
         missing_ids = self.verify_tracked_objects(tracked_objects)
-        print(f"Nuevos ids: {missing_ids}")
+        # print(f"Nuevos ids: {missing_ids}")
 
         if missing_ids:
-            # Aqui puede haber un error si un jugador previamente se asignó a un equipo y después el cluster lo canbia por otro
-            # return
             self.assign_objects(image, tracked_objects, self.testMode,  missing_ids, frame_number)
-            print("After new objects: ")
-            print(self.match)
-            self.stop = True
-            
-            
+            # print("After new objects: ")
+            # print(self.match)
+
+        # Ahora debo definir si un balón está en posesion
+        self.match.update_ball_possession(tracked_objects, self.videoInfo)
+
+        # if self.match.ball.inPossession:
+        #     print("Tengo el balon")
+        # else:
+        #     print("Nadie tiene el balon")        
         
     # Esta función es para verificar que todos los tracked_objects estén en match, y verificar si hay nuevos
     def verify_tracked_objects(self, tracked_objects):
@@ -189,7 +193,18 @@ class PassDetection(BaseTracker):
         return missing_ids
 
         
+    def draw_ball_possession(self, frame, tracked_objects):
+        if self.match.ball is not None:
+            if self.match.ball.inPossession and self.match.playerWithBall is not None:
+                for obj in tracked_objects:
+                    if obj.id == self.match.playerWithBall.id:
+                        x1, y1, x2, y2 = map(int, obj.estimate.flatten().tolist())
 
+                        font_scale = frame.shape[0] / 800
+                        # Escribe "EN POSESION" arriba del bounding box del jugador
+                        cv2.putText(frame, "EN POSESION", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), 2)
+                        break
+        return frame
 
 """
 for obj in tracked_objects:

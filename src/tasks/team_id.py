@@ -192,7 +192,7 @@ class PlayerClassifier:
             plt.savefig('image_path.png')
             plt.show()
         elif image is not None:
-            print("Image cv2")
+            # print("Image cv2")
 
             cv2.imwrite("tempImage.jpg", image)
             image = cv2.imread("tempImage.jpg")
@@ -224,7 +224,7 @@ class PlayerClassifier:
         # Aplicar HDBSCAN a los histogramas
         clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
         labels = clusterer.fit_predict(histograms)
-        print(labels)
+        # print(labels)
         
         # Encontrar los dos clusters más grandes omitiendo el label -1
         unique_labels, counts = np.unique(labels, return_counts=True)
@@ -254,27 +254,6 @@ class PlayerClassifier:
         plt.savefig('Segmentacion.png')
         plt.show()
 
-    # def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters):
-    #     for obj in tracked_objects:
-    #         x1, y1, x2, y2 = obj.estimate.flatten().tolist()
-    #         obj_box = [x1, y1, x2, y2]
-    #         max_iou = 0
-    #         assigned_cluster = -1
-            
-    #         for i in range(len(person_instances)):
-    #             box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
-    #             iou = self.calculate_iou(obj_box, box)
-    #             if iou > max_iou:
-    #                 max_iou = iou
-    #                 assigned_cluster = labels[i]
-            
-    #         if assigned_cluster in top_two_clusters:
-    #             match.add_player(player_id=obj.id, team=assigned_cluster)
-    #         else: 
-    #             match.add_extra_people(extra_id=obj.id)
-
-    #     return match
-
     def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids):
         # Obtenemos los IDs de los jugadores existentes
         player_ids = set(match.players.keys())
@@ -302,8 +281,8 @@ class PlayerClassifier:
                     match.add_extra_people(extra_id=obj.id)
         else:
             # Crear un diccionario para mapear los clústeres a los equipos existentes
-            print("Previous Players")
-            print(match)
+            # print("Previous Players")
+            # print(match)
             cluster_to_team_counts = defaultdict(Counter)
             existing_teams = set()
 
@@ -312,11 +291,11 @@ class PlayerClassifier:
                 team_number = player.team
                 existing_teams.add(team_number)
                 assigned_cluster = self.get_cluster_for_player(player_id, labels, tracked_objects, person_instances, top_two_clusters)  # Asumimos que existe esta función
-                print(f"PlayerId = {player_id}, team = {team_number}, ActualCluster = {assigned_cluster}")
+                # print(f"PlayerId = {player_id}, team = {team_number}, ActualCluster = {assigned_cluster}")
                 if assigned_cluster is not None:
                     cluster_to_team_counts[assigned_cluster][team_number] += 1
             # cluster_to_team = {actual_cluster: team_assigned_previous}
-            print(cluster_to_team_counts)
+            # print(cluster_to_team_counts)
 
             # Determinar el equipo mayoritario para cada clúster
             cluster_to_team = {}
@@ -327,7 +306,7 @@ class PlayerClassifier:
                 most_common_team = team_counts.most_common(1)[0][0]
                 cluster_to_team[cluster] = most_common_team
 
-            print(f"Cluster Inicial: {cluster_to_team}")
+            # print(f"Cluster Inicial: {cluster_to_team}")
 
 
             # Asignar el equipo no asignado al clúster restante si solo uno tiene asignación
@@ -337,15 +316,15 @@ class PlayerClassifier:
                 remaining_cluster = list(set(top_two_clusters) - set(cluster_to_team.keys()))[0]
                 cluster_to_team[remaining_cluster] = remaining_team
 
-            print(f"Cluster Final: {cluster_to_team}")
+            # print(f"Cluster Final: {cluster_to_team}")
             
             # Verificamos si missing_ids no está vacío
             if missing_ids:
                 for obj in tracked_objects:
                     if obj.id in missing_ids:
-                        print(f"missing id: {obj.id}")
+                        # print(f"missing id: {obj.id}")
                         assigned_cluster = self.get_cluster_for_object(obj, labels, tracked_objects, person_instances)
-                        print(f"Cluster del id: {assigned_cluster}")
+                        # print(f"Cluster del id: {assigned_cluster}")
 
                         if assigned_cluster in cluster_to_team:
                             team_number = cluster_to_team[assigned_cluster]
