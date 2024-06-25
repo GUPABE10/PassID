@@ -11,6 +11,8 @@ import hdbscan
 
 from skimage.metrics import structural_similarity as ssim
 
+from collections import defaultdict, Counter
+
 class PlayerClassifier:
     def __init__(self, model_config="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml", device='cpu'):
         self.cfg = get_cfg()
@@ -302,38 +304,63 @@ class PlayerClassifier:
             # Crear un diccionario para mapear los clústeres a los equipos existentes
             print("Previous Players")
             print(match)
-            cluster_to_team = {}
+            cluster_to_team_counts = defaultdict(Counter)
+            existing_teams = set()
+
             for player_id in player_ids:
                 player = match.players[player_id]
                 team_number = player.team
+                existing_teams.add(team_number)
                 assigned_cluster = self.get_cluster_for_player(player_id, labels, tracked_objects, person_instances, top_two_clusters)  # Asumimos que existe esta función
                 print(f"PlayerId = {player_id}, team = {team_number}, ActualCluster = {assigned_cluster}")
                 if assigned_cluster is not None:
-                    # ! Test de cluster permanente
-                    if assigned_cluster in cluster_to_team:
-                        if cluster_to_team[assigned_cluster] != team_number:
-                            raise ValueError(f"Conflict: Cluster {assigned_cluster} is assigned to multiple teams.")
-                    else:
-                        cluster_to_team[assigned_cluster] = team_number
+                    cluster_to_team_counts[assigned_cluster][team_number] += 1
             # cluster_to_team = {actual_cluster: team_assigned_previous}
-            print(cluster_to_team)
+            print(cluster_to_team_counts)
+
+            # Determinar el equipo mayoritario para cada clúster
+            cluster_to_team = {}
+            for cluster, team_counts in cluster_to_team_counts.items():
+                if len(team_counts) > 1 and team_counts.most_common(2)[0][1] == team_counts.most_common(2)[1][1]:
+                    # Si hay un empate, no asignamos un equipo a este clúster
+                    continue
+                most_common_team = team_counts.most_common(1)[0][0]
+                cluster_to_team[cluster] = most_common_team
+
+            print(f"Cluster Inicial: {cluster_to_team}")
+
+
+            # Asignar el equipo no asignado al clúster restante si solo uno tiene asignación
+            assigned_teams = set(cluster_to_team.values())
+            if len(assigned_teams) == 1 and len(existing_teams) == 2:
+                remaining_team = list(existing_teams - assigned_teams)[0]
+                remaining_cluster = list(set(top_two_clusters) - set(cluster_to_team.keys()))[0]
+                cluster_to_team[remaining_cluster] = remaining_team
+
+            print(f"Cluster Final: {cluster_to_team}")
             
             # Verificamos si missing_ids no está vacío
             if missing_ids:
                 for obj in tracked_objects:
                     if obj.id in missing_ids:
+                        print(f"missing id: {obj.id}")
                         assigned_cluster = self.get_cluster_for_object(obj, labels, tracked_objects, person_instances)
+                        print(f"Cluster del id: {assigned_cluster}")
+
                         if assigned_cluster in cluster_to_team:
                             team_number = cluster_to_team[assigned_cluster]
                             match.add_player(player_id=obj.id, team=team_number)
-                        else:
+                        elif assigned_cluster != -1 or assigned_cluster is None:
                             match.add_extra_people(extra_id=obj.id)
             
 
         return match
 
-    # Función para obtener el clúster asignado a un jugador existente (suponiendo que se basa en la IoU)
+        # Función para obtener el clúster asignado a un jugador existente (suponiendo que se basa en la IoU)
     def get_cluster_for_player(self, player_id, labels, tracked_objects, person_instances, top_two_clusters):
+        max_iou = 0
+        assigned_cluster = None
+
         # Lógica para determinar el clúster de un jugador existente
         for obj in tracked_objects:
             if obj.id == player_id:
@@ -342,11 +369,14 @@ class PlayerClassifier:
                 for i in range(len(person_instances)):
                     box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
                     iou = self.calculate_iou(obj_box, box)
-                    if iou > 0:  # Asumimos que cualquier superposición es suficiente
-                        assigned_cluster = labels[i]
-                        if assigned_cluster in top_two_clusters:
-                            return labels[i]
-        return None
+                    if iou > max_iou:
+                        max_iou = iou
+                        potential_cluster = labels[i]
+                        if potential_cluster in top_two_clusters:
+                            assigned_cluster = potential_cluster
+                            
+        return assigned_cluster
+
 
     # Función para obtener el clúster asignado a un nuevo objeto
     def get_cluster_for_object(self, obj, labels, tracked_objects, person_instances):

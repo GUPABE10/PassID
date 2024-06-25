@@ -15,6 +15,7 @@ from tasks.team_id import PlayerClassifier
 from detector.fasterrcnn import FasterRCNN
 from detector.yolo import MyYOLODetector
 from detector.maskrcnn import MaskRCNN
+from detector.hybrid import HybridDetector
 
 class PassDetection(BaseTracker):
     def __init__(self, input_path: str, 
@@ -51,6 +52,8 @@ class PassDetection(BaseTracker):
             self.model = MyYOLODetector(detector, device)
         elif "MaskRCNN" in detector:
             self.model = MaskRCNN(detector, device=device)
+        elif "hybrid" in detector:
+            self.model = HybridDetector(detector, device)
         else:
             print("Unknown model")
 
@@ -76,13 +79,16 @@ class PassDetection(BaseTracker):
 
         print("Detecting Passes")
 
+        frame_number = 1
+
         for frame_image in self.video_images: 
             
             #### Frame_image 
             # It returns regular OpenCV frames which enables the usage of the huge number of tools OpenCV provides to modify images.
             
             # Sección de tracking original
-            frame_number, frame = self.process_frame(self.input_path, frame_image, self.isVideo)
+            #frame number quitado
+            _, frame = self.process_frame(self.input_path, frame_image, self.isVideo)
             model_boxes, model_scores, model_labels = self.model.predict(frame, conf_threshold=self.conf_threshold)
             mask = np.ones(frame.shape[:2], frame.dtype)
 
@@ -115,6 +121,8 @@ class PassDetection(BaseTracker):
 
                 if self.stop:
                     break
+                
+            frame_number+=1
         
         print("Finalizado")
                 
