@@ -195,9 +195,9 @@ class PassDetection(BaseTracker):
         
     def draw_ball_possession(self, frame, tracked_objects):
         if self.match.ball is not None:
-            if self.match.ball.inPossession and self.match.playerWithBall is not None:
+            if self.match.ball.inPossession and self.match.lastPlayerWithBall is not None:
                 for obj in tracked_objects:
-                    if obj.id == self.match.playerWithBall.id:
+                    if obj.id == self.match.lastPlayerWithBall.id:
                         x1, y1, x2, y2 = map(int, obj.estimate.flatten().tolist())
 
                         font_scale = frame.shape[0] / 800
