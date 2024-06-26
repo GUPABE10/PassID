@@ -116,7 +116,7 @@ class PassDetection(BaseTracker):
                 self.assign_objects(frame_image, tracked_objects, self.testMode,  missing_ids, frame_number)
                 
                 self.isDetectionStarted = True
-                print(self.match)
+                # print(self.match)
                 
                 
             if self.isDetectionStarted:

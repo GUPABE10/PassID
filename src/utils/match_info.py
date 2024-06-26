@@ -58,8 +58,7 @@ class Match:
                 f")")
     
 
-    def is_green_background(image, bbox, padding=10):
-        # Expandir el bounding box
+    def is_green_background(self, image, bbox, padding=10):
         x1, y1, x2, y2 = bbox
         height, width, _ = image.shape
 
@@ -68,32 +67,30 @@ class Match:
         x2_exp = min(width, x2 + padding)
         y2_exp = min(height, y2 + padding)
         
-        # Crear una máscara para el bounding box expandido
         expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp])
-        cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+        cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), 255, thickness=-1)
         
-        # Extraer la región expandida de la imagen original
         expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
         
-        # Restar el bounding box original
-        mask = cv2.inRange(expanded_box, (255, 255, 255), (255, 255, 255))
+        mask = cv2.inRange(expanded_box, 255, 255)
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
-        # Convertir a espacio de color HSV
+        # Visualizar las regiones
+        # self.visualize_bbox(image, bbox, padding)
+
         hsv = cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2HSV)
         
-        # Definir rango de color verde en HSV
         lower_green = np.array([35, 40, 40])
         upper_green = np.array([85, 255, 255])
         
-        # Crear máscara para el color verde
         green_mask = cv2.inRange(hsv, lower_green, upper_green)
         
-        # Calcular la proporción de píxeles verdes
         green_ratio = np.sum(green_mask) / (green_mask.size * 255)
         
-        # Determinar si es suficiente verde
-        return green_ratio > 0.5
+        # print(f"Bounding Box: {bbox}")
+        # print(f"Green Ratio: {green_ratio}")
+
+        return green_ratio > 0.2
 
 
     def assign_ball_to_match(self, tracked_objects, image, padding=10):
@@ -101,8 +98,9 @@ class Match:
         for obj in tracked_objects:
             if obj.label == 2:
                 bbox = obj.estimate.flatten().tolist()
-                if self.is_green_background(image, bbox, padding):
-                    ball_candidates.append(obj.id)
+                # if self.is_green_background(image, bbox, padding):
+                #     ball_candidates.append(obj.id)
+                ball_candidates.append(obj.id)
         
         if self.ball is None:
             if len(ball_candidates) == 1:
