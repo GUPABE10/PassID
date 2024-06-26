@@ -77,7 +77,7 @@ class HybridDetector:
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
         # Visualizar las regiones
-        self.visualize_bbox(image, bbox, padding)
+        # self.visualize_bbox(image, bbox, padding)
 
         hsv = cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2HSV)
         
@@ -88,10 +88,10 @@ class HybridDetector:
         
         green_ratio = np.sum(green_mask) / (green_mask.size * 255)
         
-        print(f"Bounding Box: {bbox}")
-        print(f"Green Ratio: {green_ratio}")
+        # print(f"Bounding Box: {bbox}")
+        # print(f"Green Ratio: {green_ratio}")
 
-        return green_ratio > 0.5
+        return green_ratio > 0.2
 
 
     
