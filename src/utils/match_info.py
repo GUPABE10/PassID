@@ -203,6 +203,8 @@ class Match:
         else:
             self.ball.inPossession = False
             self.playerWithBall = None
+            # Aqui queda pendiente si pongo framesInPossession = 0
+            # Osea que si el balón se aleja de un jugador pero  despues se acerca estuvo en posesion de el siempre? o debe reiniciar el contador?
 
 
 

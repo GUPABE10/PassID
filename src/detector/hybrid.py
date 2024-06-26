@@ -5,6 +5,7 @@ import numpy as np
 from typing import Tuple, Union
 from ultralytics import YOLO
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_ResNet50_FPN_V2_Weights
+import matplotlib.pyplot as plt
 
 class HybridDetector:
     def __init__(self, model_name: str, device: str = 'cpu'):
@@ -26,6 +27,36 @@ class HybridDetector:
             raise ValueError("Unsupported model name. Use 'hybrid' for this detector.")
 
     
+
+    def visualize_bbox(image, bbox, padding):
+        x1, y1, x2, y2 = bbox
+        height, width, _ = image.shape
+
+        x1_exp = max(0, x1 - padding)
+        y1_exp = max(0, x1 - padding)
+        x2_exp = min(width, x2 + padding)
+        y2_exp = min(height, y2 + padding)
+
+        expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
+        mask = np.zeros_like(expanded_region)
+        mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+        surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
+
+        plt.subplot(1, 3, 1)
+        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        plt.title("Original Image")
+
+        plt.subplot(1, 3, 2)
+        plt.imshow(cv2.cvtColor(expanded_region, cv2.COLOR_BGR2RGB))
+        plt.title("Expanded Region")
+
+        plt.subplot(1, 3, 3)
+        plt.imshow(cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2RGB))
+        plt.title("Surrounding Region")
+
+        plt.savefig('Ball_image.png')
+        plt.show()
+
     def is_green_background(self, image, bbox, padding=10):
         x1, y1, x2, y2 = bbox
         height, width, _ = image.shape
@@ -43,6 +74,9 @@ class HybridDetector:
         mask = cv2.inRange(expanded_box, (255, 255, 255), (255, 255, 255))
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
+        # Visualizar las regiones
+        self.visualize_bbox(image, bbox, padding)
+
         hsv = cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2HSV)
         
         lower_green = np.array([35, 40, 40])
@@ -51,8 +85,12 @@ class HybridDetector:
         green_mask = cv2.inRange(hsv, lower_green, upper_green)
         
         green_ratio = np.sum(green_mask) / (green_mask.size * 255)
+
+        print(f"Bounding Box: {bbox}")
+        print(f"Green Ratio: {green_ratio}")
         
         return green_ratio > 0.5
+
     
     
     def predict(
@@ -114,7 +152,8 @@ class HybridDetector:
             if self.is_green_background(img, bbox.cpu().numpy().astype(int), padding=10):
                 valid_ball_indices.append(i)
 
-        valid_ball_indices = torch.tensor(valid_ball_indices)
+        # valid_ball_indices = torch.tensor(valid_ball_indices)
+        valid_ball_indices = torch.tensor(valid_ball_indices, dtype=torch.long)
         ball_boxes = ball_boxes[valid_ball_indices]
         ball_scores = ball_scores[valid_ball_indices]
         ball_labels = ball_labels[valid_ball_indices]
