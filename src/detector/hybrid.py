@@ -38,8 +38,14 @@ class HybridDetector:
         y2_exp = min(height, y2 + padding)
 
         expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
-        mask = np.zeros_like(expanded_region)
+        # mask = np.zeros_like(expanded_region)
+        # mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+
+        # Crear una máscara de la misma forma que expanded_region, con 3 canales
+        mask = np.zeros(expanded_region.shape, dtype=np.uint8)
         mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+        
+
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
         plt.subplot(1, 3, 1)
@@ -66,7 +72,7 @@ class HybridDetector:
         x2_exp = min(width, x2 + padding)
         y2_exp = min(height, y2 + padding)
         
-        expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp])
+        expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp], dtype=np.uint8)
         cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
         
         expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
@@ -85,11 +91,12 @@ class HybridDetector:
         green_mask = cv2.inRange(hsv, lower_green, upper_green)
         
         green_ratio = np.sum(green_mask) / (green_mask.size * 255)
-
+        
         print(f"Bounding Box: {bbox}")
         print(f"Green Ratio: {green_ratio}")
-        
+
         return green_ratio > 0.5
+
 
     
     
