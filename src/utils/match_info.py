@@ -195,7 +195,7 @@ class Match:
                 self.ball.framesInPossession = 1
 
 
-            if self.ball.framesInPossession >= 3:
+            if self.ball.framesInPossession >= 1:
                 self.ball.inPossession = True
 
         else:
