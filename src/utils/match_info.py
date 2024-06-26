@@ -115,7 +115,7 @@ class Match:
             elif len(ball_candidates) > 1:
                 pass
 
-        print(f"Ball: {self.ball}")
+        # print(f"Ball: {self.ball}")
 
     
 
@@ -179,12 +179,13 @@ class Match:
         
         threshold = 0.03  # Experimental puede ser menor a 0.05 pero no mayor.
         
+        print(f"Closest Player: {closest_player}")
+        print(f"Last Player with Ball: {self.lastPlayerWithBall}")
+        print(f"min_distance: {min_distance}")
         # Si hay un jugador cercano
         if min_distance < threshold:
 
-            print(f"Closest Player: {closest_player}")
-            print(f"Last Player with Ball: {self.lastPlayerWithBall}")
-            print(f"Ball data: {self.ball}")
+            # print(f"Ball data: {self.ball}")
 
             # Si no hay jugador con pelota
             if self.lastPlayerWithBall is None:
