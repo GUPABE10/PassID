@@ -180,6 +180,10 @@ class Match:
         # Si hay un jugador cercano
         if min_distance < threshold:
 
+            print(f"Closest Player: {closest_player}")
+            print(f"Last Player with Ball: {self.lastPlayerWithBall}")
+            print(f"Ball data: {self.ball}")
+
             # Si no hay jugador con pelota
             if self.lastPlayerWithBall is None:
                 self.lastPlayerWithBall = closest_player
