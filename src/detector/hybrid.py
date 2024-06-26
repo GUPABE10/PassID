@@ -33,19 +33,16 @@ class HybridDetector:
         height, width, _ = image.shape
 
         x1_exp = max(0, x1 - padding)
-        y1_exp = max(0, x1 - padding)
+        y1_exp = max(0, y1 - padding)
         x2_exp = min(width, x2 + padding)
         y2_exp = min(height, y2 + padding)
 
         expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
-        # mask = np.zeros_like(expanded_region)
-        # mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
-
-        # Crear una máscara de la misma forma que expanded_region, con 3 canales
-        mask = np.zeros(expanded_region.shape, dtype=np.uint8)
-        mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
         
-
+        # Crear una máscara de la misma forma que expanded_region, con 3 canales
+        mask = np.zeros(expanded_region.shape[:2], dtype=np.uint8)
+        mask = cv2.rectangle(mask, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), 255, thickness=-1)
+        
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
         plt.subplot(1, 3, 1)
@@ -59,8 +56,6 @@ class HybridDetector:
         plt.subplot(1, 3, 3)
         plt.imshow(cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2RGB))
         plt.title("Surrounding Region")
-
-        plt.savefig('Ball_image.png')
         plt.show()
 
     def is_green_background(self, image, bbox, padding=10):
@@ -72,12 +67,12 @@ class HybridDetector:
         x2_exp = min(width, x2 + padding)
         y2_exp = min(height, y2 + padding)
         
-        expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp], dtype=np.uint8)
-        cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+        expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp])
+        cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), 255, thickness=-1)
         
         expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
         
-        mask = cv2.inRange(expanded_box, (255, 255, 255), (255, 255, 255))
+        mask = cv2.inRange(expanded_box, 255, 255)
         surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
 
         # Visualizar las regiones
