@@ -1,13 +1,12 @@
 import cv2
 import numpy as np
 
-from utils.match_objects import Player, Ball
+from utils.match_objects import Player, Ball, Pass
 
 class VideoInfo:
-    def __init__(self, video_path, frame_rate: int = 5):
+    def __init__(self, video_path):
         self.video_path = video_path
-        self.frame_rate = frame_rate
-        self.width, self.height, self.duration = self.get_video_info()
+        self.width, self.height, self.duration, self.frame_rate, self.frame_count = self.get_video_info()
 
     def get_video_info(self):
         cap = cv2.VideoCapture(self.video_path)
@@ -21,7 +20,12 @@ class VideoInfo:
         duration = frame_count / frame_rate_original
         
         cap.release()
-        return width, height, duration
+        return width, height, duration, frame_rate_original, frame_count
+    
+    def frames_to_seconds(self, frames):
+        if frames < 0 or frames > self.frame_count:
+            raise ValueError("Frame number out of range")
+        return frames / self.frame_rate
 
     def __str__(self):
         return f"VideoInfo(frame_rate={self.frame_rate}, width={self.width}, height={self.height}, duration={self.duration})"
@@ -120,7 +124,7 @@ class Match:
     
 
     
-    def update_ball_possession(self, tracked_objects, video_info):
+    def update_ball_possession(self, tracked_objects, video_info, frame_number):
         if self.ball is None:
             # print(f"Balón no identificado aún: {self.ball}")
             return
@@ -179,11 +183,11 @@ class Match:
         
         threshold = 0.03  # Experimental puede ser menor a 0.05 pero no mayor.
         
-        print(f"Closest Player: {closest_player}")
-        print(f"Last Player with Ball: {self.lastPlayerWithBall}")
-        print(f"min_distance: {min_distance}")
-        print(f"Is Ball on possession? {self.ball.inPossession}")
-        print(f"Frames in possession: {self.ball.framesInPossession}")
+        # print(f"Closest Player: {closest_player}")
+        # print(f"Last Player with Ball: {self.lastPlayerWithBall}")
+        # print(f"min_distance: {min_distance}")
+        # print(f"Is Ball on possession? {self.ball.inPossession}")
+        # print(f"Frames in possession: {self.ball.framesInPossession}")
         # Si hay un jugador cercano
         if min_distance < threshold:
 
@@ -191,6 +195,7 @@ class Match:
 
             # Si no hay jugador con pelota
             if self.lastPlayerWithBall is None:
+                print("SOLO DEBE IMPRIMIRSE UNA VEZ CUANDO EL JUGADOR NO ESTÉ ASIGNADO")
                 self.lastPlayerWithBall = closest_player
                 self.ball.framesInPossession = 1
 
@@ -200,8 +205,29 @@ class Match:
 
             # Si es diferente jugador
             else:
+                
+                durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
+                secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
+
+                newPass = Pass(initPlayer = self.lastPlayerWithBall, finalPlayer = closest_player, frames = self.ball.framesInTransit, durationPass= durationPass, initFrame = self.ball.initFrameNumber, secondInitPass = secondInitPass)
+
+                # Variabe video_info
+
+
+
+                if newPass.valid:
+                    newPass.save_to_csv("passes.csv")
+                else:
+                    pass
+
                 self.lastPlayerWithBall = closest_player
                 self.ball.framesInPossession = 1
+                # Codigo para agregar un pase
+
+                
+
+
+                self.ball.framesInTransit = 0
 
 
             if self.ball.framesInPossession >= 1:
@@ -209,7 +235,19 @@ class Match:
 
         else:
             self.ball.inPossession = False
-            self.lastPlayerWithBall = None
+
+            # Es decir que por lo menos alguien tuvo antes la pelota
+            if self.lastPlayerWithBall is not None:
+                self.ball.framesInPossession = 0
+                self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
+                self.ball.initFrameNumber = frame_number
+            else:
+                pass
+
+
+
+
+            # self.lastPlayerWithBall = None
             # Aqui queda pendiente si pongo framesInPossession = 0
             # Osea que si el balón se aleja de un jugador pero  despues se acerca estuvo en posesion de el siempre? o debe reiniciar el contador?
 

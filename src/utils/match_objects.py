@@ -1,3 +1,6 @@
+import csv
+import os
+
 class Player:
     """
         team: es el id del cluster
@@ -27,6 +30,47 @@ class Ball:
         self.id = id
         self.inPossession = False
         self.framesInPossession = 0
+        self.framesInTransit = 0
+        self.initFrameNumber = 0
 
     def __str__(self):
         return f"Ball(id={self.id})"
+    
+
+class Pass:
+    def __init__(self, initPlayer, finalPlayer, frames, durationPass, initFrame, secondInitPass):
+        self.initPlayer = initPlayer
+        self.finalPlayer = finalPlayer
+        self.frames = frames
+        self.durationPass = durationPass
+        self.initFrame = initFrame
+        self.secondInitPass = secondInitPass
+        
+        self.valid = self.isValid() # Esto dice si e sun pase valido de compañero a compañero
+
+    def isValid(self):
+        return self.initPlayer.team == self.finalPlayer.team
+    
+    def save_to_csv(self, file_path):
+        # Define the row to be added
+        row = [
+            self.initPlayer.id,
+            self.finalPlayer.id,
+            self.secondInitPass,
+            self.durationPass,
+            self.secondInitPass + self.durationPass
+        ]
+        
+        # Check if the file already exists
+        file_exists = os.path.isfile(file_path)
+        
+        # Open the file in append mode
+        with open(file_path, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            
+            # If the file does not exist, write the header
+            if not file_exists:
+                writer.writerow(['Passer (id)', 'Receiver (id)', 'Start Time (s)', 'Duration (s)', 'End Time (s)'])
+            
+            # Write the row of data
+            writer.writerow(row)

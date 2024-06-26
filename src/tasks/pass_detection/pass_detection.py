@@ -167,7 +167,7 @@ class PassDetection(BaseTracker):
             # print(self.match)
 
         # Ahora debo definir si un balón está en posesion
-        self.match.update_ball_possession(tracked_objects, self.videoInfo)
+        self.match.update_ball_possession(tracked_objects, self.videoInfo, frame_number)
 
         # if self.match.ball.inPossession:
         #     print("Tengo el balon")
