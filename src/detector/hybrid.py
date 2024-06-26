@@ -28,7 +28,7 @@ class HybridDetector:
 
     
 
-    def visualize_bbox(image, bbox, padding):
+    def visualize_bbox(self, image, bbox, padding):
         x1, y1, x2, y2 = bbox
         height, width, _ = image.shape
 
