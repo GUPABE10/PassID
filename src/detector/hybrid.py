@@ -25,6 +25,36 @@ class HybridDetector:
         else:
             raise ValueError("Unsupported model name. Use 'hybrid' for this detector.")
 
+    
+    def is_green_background(self, image, bbox, padding=10):
+        x1, y1, x2, y2 = bbox
+        height, width, _ = image.shape
+
+        x1_exp = max(0, x1 - padding)
+        y1_exp = max(0, y1 - padding)
+        x2_exp = min(width, x2 + padding)
+        y2_exp = min(height, y2 + padding)
+        
+        expanded_box = np.zeros_like(image[y1_exp:y2_exp, x1_exp:x2_exp])
+        cv2.rectangle(expanded_box, (x1 - x1_exp, y1 - y1_exp), (x2 - x1_exp, y2 - y1_exp), (255, 255, 255), thickness=-1)
+        
+        expanded_region = image[y1_exp:y2_exp, x1_exp:x2_exp]
+        
+        mask = cv2.inRange(expanded_box, (255, 255, 255), (255, 255, 255))
+        surrounding_region = cv2.bitwise_and(expanded_region, expanded_region, mask=mask)
+
+        hsv = cv2.cvtColor(surrounding_region, cv2.COLOR_BGR2HSV)
+        
+        lower_green = np.array([35, 40, 40])
+        upper_green = np.array([85, 255, 255])
+        
+        green_mask = cv2.inRange(hsv, lower_green, upper_green)
+        
+        green_ratio = np.sum(green_mask) / (green_mask.size * 255)
+        
+        return green_ratio > 0.5
+    
+    
     def predict(
         self,
         img: Union[str, np.ndarray],
@@ -77,6 +107,18 @@ class HybridDetector:
         ball_scores = rcnn_scores[ball_mask]
         ball_labels = rcnn_labels[ball_mask]
         ball_labels[:] = 2  # Reemplazar etiqueta por 2 para "ball"
+
+
+        valid_ball_indices = []
+        for i, bbox in enumerate(ball_boxes):
+            if self.is_green_background(img, bbox.cpu().numpy().astype(int), padding=10):
+                valid_ball_indices.append(i)
+
+        valid_ball_indices = torch.tensor(valid_ball_indices)
+        ball_boxes = ball_boxes[valid_ball_indices]
+        ball_scores = ball_scores[valid_ball_indices]
+        ball_labels = ball_labels[valid_ball_indices]
+
 
         # Combinar resultados
         combined_boxes = torch.cat((person_boxes, ball_boxes), dim=0)

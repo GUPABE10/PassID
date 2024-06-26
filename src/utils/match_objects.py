@@ -26,6 +26,7 @@ class Ball:
     def __init__(self, id):
         self.id = id
         self.inPossession = False
+        self.framesInPossession = 0
 
     def __str__(self):
         return f"Ball(id={self.id})"

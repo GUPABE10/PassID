@@ -142,7 +142,7 @@ class PassDetection(BaseTracker):
         # print("After Classify")
         # print(self.match)
 
-        self.match.assign_ball_to_match(tracked_objects)
+        self.match.assign_ball_to_match(tracked_objects, image)
         # print("After assign Ball")
         # print(self.match)
         
@@ -202,7 +202,7 @@ class PassDetection(BaseTracker):
 
                         font_scale = frame.shape[0] / 800
                         # Escribe "EN POSESION" arriba del bounding box del jugador
-                        cv2.putText(frame, "EN POSESION", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 255, 0), 2)
+                        cv2.putText(frame, "EN POSESION", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 0, 0), 2)
                         break
         return frame
 
