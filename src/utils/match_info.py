@@ -182,6 +182,8 @@ class Match:
         print(f"Closest Player: {closest_player}")
         print(f"Last Player with Ball: {self.lastPlayerWithBall}")
         print(f"min_distance: {min_distance}")
+        print(f"Is Ball on possession? {self.ball.inPossession}")
+        print(f"Frames in possession: {self.ball.framesInPossession}")
         # Si hay un jugador cercano
         if min_distance < threshold:
 
@@ -207,7 +209,7 @@ class Match:
 
         else:
             self.ball.inPossession = False
-            self.playerWithBall = None
+            self.lastPlayerWithBall = None
             # Aqui queda pendiente si pongo framesInPossession = 0
             # Osea que si el balón se aleja de un jugador pero  despues se acerca estuvo en posesion de el siempre? o debe reiniciar el contador?
 
