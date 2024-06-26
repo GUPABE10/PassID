@@ -88,8 +88,8 @@ class HybridDetector:
         
         green_ratio = np.sum(green_mask) / (green_mask.size * 255)
         
-        # print(f"Bounding Box: {bbox}")
-        # print(f"Green Ratio: {green_ratio}")
+        print(f"Bounding Box: {bbox}")
+        print(f"Green Ratio: {green_ratio}")
 
         return green_ratio > 0.2
 

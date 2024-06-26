@@ -206,16 +206,20 @@ class Match:
             # Si es diferente jugador
             else:
                 
+                print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
 
                 newPass = Pass(initPlayer = self.lastPlayerWithBall, finalPlayer = closest_player, frames = self.ball.framesInTransit, durationPass= durationPass, initFrame = self.ball.initFrameNumber, secondInitPass = secondInitPass)
+
+                print(newPass)
 
                 # Variabe video_info
 
 
 
                 if newPass.valid:
+                    print("Guardando pase")
                     newPass.save_to_csv("passes.csv")
                 else:
                     pass

@@ -74,3 +74,9 @@ class Pass:
             
             # Write the row of data
             writer.writerow(row)
+
+    def __str__(self):
+        return (f"Pass(initPlayer={self.initPlayer} "
+                f"finalPlayer={self.finalPlayer}"
+                f"frames={self.frames}, durationPass={self.durationPass}, initFrame={self.initFrame}, "
+                f"secondInitPass={self.secondInitPass}, valid={self.valid})")
