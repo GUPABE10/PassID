@@ -142,6 +142,9 @@ class Match:
         if ball_position is None:
             # print(f"No se encontró al balón dentro de Tracked_objects. Id = {self.ball.id}")
             # print(f"Actual Tracked Objects: {tracked_objects}")
+
+            # self.ball.inPossession = False
+
             return
         
         ball_x1, ball_y1, ball_x2, ball_y2 = ball_position.estimate.flatten().tolist()
