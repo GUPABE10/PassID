@@ -115,6 +115,8 @@ class Match:
             elif len(ball_candidates) > 1:
                 pass
 
+        print(f"Ball: {self.ball}")
+
     
 
     
