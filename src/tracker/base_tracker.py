@@ -13,7 +13,7 @@ from norfair.tracker import Detection, TrackedObject
 import os
 import cv2
 
-DISTANCE_THRESHOLD_CENTROID: float = 0.08
+DISTANCE_THRESHOLD_CENTROID: float = 0.04 # Original 0.08
 
 class BaseTracker:
     def __init__(self):
