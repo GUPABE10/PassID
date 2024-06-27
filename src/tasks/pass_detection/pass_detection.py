@@ -78,6 +78,8 @@ class PassDetection(BaseTracker):
 
         self.stop = False
 
+        self.team_colors = {}
+
 
 
     def detect_passes(self):
@@ -210,10 +212,7 @@ class PassDetection(BaseTracker):
 
 
     def draw_teams(self, frame, tracked_objects):
-        # Diccionario para los colores de los equipos
-        team_colors = {}
         ball_color = (255, 0, 0)  # Color RGB para la pelota
-
         font_scale = frame.shape[0] / 1000
 
         for obj in tracked_objects:
@@ -224,10 +223,10 @@ class PassDetection(BaseTracker):
                 player = self.match.players[id]
                 
                 # Asignar un color si el equipo no tiene uno aún
-                if player.team not in team_colors:
-                    team_colors[player.team] = self.generate_random_color()
+                if player.team not in self.team_colors:
+                    self.team_colors[player.team] = self.generate_random_color()
 
-                color = team_colors[player.team]
+                color = self.team_colors[player.team]
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 cv2.putText(frame, f"Player {player.id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, 2)
