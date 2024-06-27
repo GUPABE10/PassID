@@ -32,7 +32,7 @@ def setup_pass_detect(subparsers):
     parser_pass_detect.add_argument('--files', type=str, help='Video files to process or folder path with images')
     parser_pass_detect.add_argument("--conf-threshold", type=float, default=0.8, help="Object confidence threshold")
     parser_pass_detect.add_argument("--track-points", type=str, default="bbox", help="Track points: 'centroid' or 'bbox'")
-    parser_pass_detect.add_argument("--distance-threshold", type=float, default=1.0, help="Distance threshold")
+    parser_pass_detect.add_argument("--distance-threshold", type=float, default=0.04, help="Distance threshold")
     # Originalmente funcionaba con default= "scalar"
     parser_pass_detect.add_argument("--distance-function", type=str, default="scalar" , help="Distance function: scalar or iou")
     parser_pass_detect.add_argument("--backbone", type=str, default="resnet50v2", help="Backbone for object detector")

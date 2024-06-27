@@ -48,11 +48,11 @@ class BaseTracker:
             distance_function = "iou"
         elif distance_function == "scalar":
             distance_function = create_normalized_mean_euclidean_distance(height, width)
-            distance_threshold = DISTANCE_THRESHOLD_CENTROID
+            # distance_threshold = DISTANCE_THRESHOLD_CENTROID
         else:
             Warning("Distance function not recognized. Using default: scalar")
             distance_function = create_normalized_mean_euclidean_distance(height, width)
-            distance_threshold = DISTANCE_THRESHOLD_CENTROID
+            # distance_threshold = DISTANCE_THRESHOLD_CENTROID
         return distance_function, distance_threshold
 
     def initialize_tracker(self, distance_function, distance_threshold):
