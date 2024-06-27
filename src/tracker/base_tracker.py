@@ -56,7 +56,7 @@ class BaseTracker:
         return distance_function, distance_threshold
 
     def initialize_tracker(self, distance_function, distance_threshold):
-        return Tracker(distance_function=distance_function, distance_threshold=distance_threshold)
+        return Tracker(distance_function=distance_function, distance_threshold=distance_threshold, initialization_delay = 3)
 
     def initialize_paths_drawer(self):
         return AbsolutePaths(max_history=40, thickness=2)
