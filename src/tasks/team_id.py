@@ -266,8 +266,7 @@ class PlayerClassifier:
 
     def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids):
 
-        if len(tracked_objects) < 6:
-            return match
+        
 
         # Obtenemos los IDs de los jugadores existentes
         player_ids = set(match.players.keys())
@@ -276,6 +275,9 @@ class PlayerClassifier:
 
         # Antes tenia len(player_ids) == 0 or
         if totallyNewPlayers:
+            if len(tracked_objects) < 6:
+                return match
+
             print("Esto solo se debe de imprimir una sola vez a menos que se dejen de detectar jugadores")
             # Si no hay jugadores existentes, seguimos la lógica original
             for obj in tracked_objects:
