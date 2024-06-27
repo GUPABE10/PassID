@@ -9,6 +9,7 @@ Recibe:
 """
 import numpy as np
 import cv2
+import random
 from tracker.base_tracker import BaseTracker
 from utils.match_info import VideoInfo, Match
 from tasks.team_id import PlayerClassifier
@@ -209,8 +210,8 @@ class PassDetection(BaseTracker):
 
 
     def draw_teams(self, frame, tracked_objects):
-        # Colores para los equipos y la pelota
-        team_colors = {0: (0, 0, 255), 1: (0, 255, 0)}  # Colores RGB para los equipos
+        # Diccionario para los colores de los equipos
+        team_colors = {}
         ball_color = (255, 0, 0)  # Color RGB para la pelota
 
         font_scale = frame.shape[0] / 1000
@@ -221,17 +222,25 @@ class PassDetection(BaseTracker):
 
             if id in self.match.players:
                 player = self.match.players[id]
+                
+                # Asignar un color si el equipo no tiene uno aún
+                if player.team not in team_colors:
+                    team_colors[player.team] = self.generate_random_color()
+
                 color = team_colors[player.team]
 
-                
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 cv2.putText(frame, f"Player {player.id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, 2)
-            
+
             elif self.match.ball is not None and id == self.match.ball.id:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), ball_color, 2)
                 cv2.putText(frame, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, ball_color, 2)
-        
+
         return frame
+    
+    def generate_random_color(self):
+        """Genera un color RGB aleatorio."""
+        return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 """
 for obj in tracked_objects:
