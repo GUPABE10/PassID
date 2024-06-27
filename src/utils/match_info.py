@@ -37,6 +37,7 @@ class Match:
         self.extras = set() # Evita Duplicidad
         self.ball = None
         self.lastPlayerWithBall = None
+        self.newPass = None
 
     def add_player(self, player_id, team):
         self.players[player_id] = Player(player_id, team)
@@ -223,7 +224,8 @@ class Match:
 
                 if newPass.valid:
                     print("Guardando pase")
-                    newPass.save_to_csv("passes.csv")
+                    self.newPass = newPass
+                    self.newPass.save_to_csv("passes.csv")
                 else:
                     pass
 

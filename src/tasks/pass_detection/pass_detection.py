@@ -131,6 +131,8 @@ class PassDetection(BaseTracker):
                 # frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
                 frame = self.draw_ball_possession(frame, tracked_objects)
                 frame = self.draw_teams(frame, tracked_objects)
+                frame = self.draw_pass_info(frame)
+                
                 self.video_images.write(frame)
 
             if self.stop:
@@ -171,7 +173,7 @@ class PassDetection(BaseTracker):
             # print(self.match)
 
         # Ahora debo definir si un balón está en posesion
-        self.match.update_ball_possession(tracked_objects, self.videoInfo, frame_number)
+        self.match.update_ball_possession(tracked_objects, self.videoInfo, frame_number) 
 
         # if self.match.ball.inPossession:
         #     print("Tengo el balon")
@@ -241,6 +243,42 @@ class PassDetection(BaseTracker):
     def generate_random_color(self):
         """Genera un color RGB aleatorio."""
         return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    
+    def draw_pass_info(self, frame):
+
+        pass_instance = self.match.newPass
+
+        # Define the size and position of the rectangle
+        top_left_corner = (frame.shape[1] - 250, 10)
+        bottom_right_corner = (frame.shape[1] - 10, 110)
+        
+        # Draw the rectangle (background for text)
+        cv2.rectangle(frame, top_left_corner, bottom_right_corner, (255, 255, 255), -1)  # White rectangle
+
+        # Define the position for the text
+        text_start_x = top_left_corner[0] + 10
+        text_start_y = top_left_corner[1] + 30
+        line_height = 25
+
+        # Prepare the text
+        pass_text = [
+            f"Passer ID: {pass_instance.initPlayer.id}",
+            f"Receiver ID: {pass_instance.finalPlayer.id}",
+            f"Start Time: {pass_instance.secondInitPass:.2f} s",
+            f"Duration: {pass_instance.durationPass:.2f} s",
+            f"End Time: {pass_instance.secondInitPass + pass_instance.durationPass:.2f} s",
+            f"Valid: {'Yes' if pass_instance.valid else 'No'}"
+        ]
+
+        # Set the font
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        # Write each line of text
+        for i, line in enumerate(pass_text):
+            y = text_start_y + i * line_height
+            cv2.putText(frame, line, (text_start_x, y), font, 0.5, (0, 0, 0), 1, cv2.LINE_AA)  # Black text
+
+        return frame
 
 """
 for obj in tracked_objects:
