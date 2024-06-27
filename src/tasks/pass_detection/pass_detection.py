@@ -191,7 +191,8 @@ class PassDetection(BaseTracker):
         # Verificamos que cada id en tracked_objects esté en players, extras o ball
         for obj in tracked_objects:
             obj_id = obj.id
-            if obj_id not in player_ids and obj_id not in extra_ids and obj_id != ball_id:
+            label = obj.label
+            if obj_id not in player_ids and obj_id not in extra_ids and obj_id != ball_id and label == 1:
                 missing_ids.add(obj_id)
 
         return missing_ids
