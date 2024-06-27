@@ -127,7 +127,7 @@ class PassDetection(BaseTracker):
             if self.testMode:
                 # frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
                 frame = self.draw_ball_possession(frame, tracked_objects)
-                frame = self.draw_passes(frame, tracked_objects)
+                frame = self.draw_teams(frame, tracked_objects)
                 self.video_images.write(frame)
 
             if self.stop:
@@ -208,10 +208,12 @@ class PassDetection(BaseTracker):
         return frame
 
 
-    def draw_passes(self, frame, tracked_objects):
+    def draw_teams(self, frame, tracked_objects):
         # Colores para los equipos y la pelota
         team_colors = {0: (0, 0, 255), 1: (0, 255, 0)}  # Colores RGB para los equipos
         ball_color = (255, 0, 0)  # Color RGB para la pelota
+
+        font_scale = frame.shape[0] / 1000
 
         for obj in tracked_objects:
             id = obj.id
@@ -221,13 +223,13 @@ class PassDetection(BaseTracker):
                 player = self.match.players[id]
                 color = team_colors[player.team]
 
-                font_scale = frame.shape[0] / 1000
+                
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 cv2.putText(frame, f"Player {player.id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, 2)
             
             elif self.match.ball is not None and id == self.match.ball.id:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), ball_color, 2)
-                cv2.putText(frame, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ball_color, 2)
+                cv2.putText(frame, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, ball_color, 2)
         
         return frame
 
