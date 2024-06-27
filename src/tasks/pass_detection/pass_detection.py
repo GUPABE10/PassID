@@ -132,7 +132,7 @@ class PassDetection(BaseTracker):
                 frame = self.draw_ball_possession(frame, tracked_objects)
                 frame = self.draw_teams(frame, tracked_objects)
                 frame = self.draw_pass_info(frame)
-                
+
                 self.video_images.write(frame)
 
             if self.stop:
@@ -245,6 +245,9 @@ class PassDetection(BaseTracker):
         return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     
     def draw_pass_info(self, frame):
+
+        if self.match.newPass is None:
+            return frame
 
         pass_instance = self.match.newPass
 
