@@ -268,8 +268,8 @@ class PassDetection(BaseTracker):
             f"Passer ID: {pass_instance.initPlayer.id}",
             f"Receiver ID: {pass_instance.finalPlayer.id}",
             f"Start Time: {pass_instance.secondInitPass:.2f} s",
-            f"Duration: {pass_instance.durationPass:.2f} s",
-            f"End Time: {pass_instance.secondInitPass + pass_instance.durationPass:.2f} s",
+            f"Duration: {pass_instance.secondFinalPass - pass_instance.secondInitPass:.2f} s",
+            f"End Time: {pass_instance.secondFinalPass:.2f} s",
             f"Valid: {'Yes' if pass_instance.valid else 'No'}"
         ]
 

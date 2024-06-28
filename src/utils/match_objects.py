@@ -38,11 +38,11 @@ class Ball:
     
 
 class Pass:
-    def __init__(self, initPlayer, finalPlayer, frames, durationPass, initFrame, secondInitPass):
+    def __init__(self, initPlayer, finalPlayer, frames, secondFinalPass, initFrame, secondInitPass):
         self.initPlayer = initPlayer
         self.finalPlayer = finalPlayer
         self.frames = frames
-        self.durationPass = durationPass
+        self.secondFinalPass = secondFinalPass
         self.initFrame = initFrame
         self.secondInitPass = secondInitPass
         
@@ -57,8 +57,8 @@ class Pass:
             self.initPlayer.id,
             self.finalPlayer.id,
             self.secondInitPass,
-            self.durationPass,
-            self.secondInitPass + self.durationPass
+            self.secondFinalPass - self.secondInitPass,
+            self.secondFinalPass
         ]
         
         # Check if the file already exists

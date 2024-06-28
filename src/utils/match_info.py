@@ -147,7 +147,7 @@ class Match:
 
             self.ball.inPossession = False
             # self.ball.framesInPossession = 0
-            self.ball.initFrameNumber = frame_number
+            # self.ball.initFrameNumber = frame_number
             self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
             return
         
@@ -225,18 +225,21 @@ class Match:
             elif closest_player.id != self.lastPlayerWithBall.id:
                 self.ball.framesInPossession = 1
                 self.mediumPlayer = closest_player
+
+                self.ball.framesInTransit += 1
                 
                 # if  self.ball.framesInPossession <= 2:
 
             
             # Si el jugador mas cercano es diferente al ultimo guardado
             # y ademas ya la tuvo alguien suficiente tiempo
-            if closest_player.id != self.lastPlayerWithBall.id and self.ball.framesInPossession > 2:
+            if closest_player.id != self.lastPlayerWithBall.id and self.ball.framesInPossession > 3:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
+                secondFinalPass = video_info.frames_to_seconds(frame_number)
 
-                newPass = Pass(initPlayer = self.lastPlayerWithBall, finalPlayer = closest_player, frames = self.ball.framesInTransit, durationPass= durationPass, initFrame = self.ball.initFrameNumber, secondInitPass = secondInitPass)
+                newPass = Pass(initPlayer = self.lastPlayerWithBall, finalPlayer = closest_player, frames = self.ball.framesInTransit, secondFinalPass = secondFinalPass, initFrame = self.ball.initFrameNumber, secondInitPass = secondInitPass)
 
                 print(newPass)
 
