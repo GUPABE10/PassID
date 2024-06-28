@@ -38,6 +38,7 @@ class Match:
         self.ball = None
         self.lastPlayerWithBall = None
         self.newPass = None
+        self.mediumPlayer = None # Para guardar a algun jugador de paso
 
     def add_player(self, player_id, team):
         self.players[player_id] = Player(player_id, team)
@@ -189,31 +190,48 @@ class Match:
         
         threshold = 0.03  # Experimental puede ser menor a 0.05 pero no mayor.
         
-        # print(f"Closest Player: {closest_player}")
-        # print(f"Last Player with Ball: {self. lastPlayerWithBall}")
-        # print(f"min_distance: {min_distance}")
-        # print(f"Is Ball on possession? {self.ball.inPossession}")
-        # print(f"Frames in possession: {self.ball.framesInPossession}")
-        # Si hay un jugador cercano
-        if min_distance < threshold:
+        print(f"Closest Player: {closest_player}")
+        print(f"Last Player with Ball: {self. lastPlayerWithBall}")
+        print(f"min_distance: {min_distance}")
+        print(f"Is Ball on possession? {self.ball.inPossession}")
+        print(f"Frames in possession: {self.ball.framesInPossession}")
 
-            
+        # Si hay un jugador cercano a la pelota
+        if min_distance < threshold:
 
             # print(f"Ball data: {self.ball}")
 
             # Si no hay jugador con pelota
+            # Directamente se asigna y empieza el conteo
             if self.lastPlayerWithBall is None:
                 print("SOLO DEBE IMPRIMIRSE UNA VEZ CUANDO EL JUGADOR NO ESTÉ ASIGNADO")
                 self.lastPlayerWithBall = closest_player
                 self.ball.framesInPossession = 1
 
-            # Si el mismo jugador sigue teniendo la pelota
-            elif closest_player.id == self.lastPlayerWithBall.id:
-                self.ball.framesInPossession += 1
-                self.ball.inPossession = True
+                self.mediumPlayer = closest_player
 
-            # Si es diferente jugador
-            elif self.ball.framesInPossession >= 2:
+            # Si el mismo jugador sigue teniendo la pelota
+            elif closest_player.id == self.lastPlayerWithBall.id or closest_player.id == self.mediumPlayer.id :
+                self.ball.framesInPossession += 1
+
+
+            # Suponiendo que un jugador llega a la posesion
+            # La pelota se aleja
+            # Posesion pasa a False
+            # Si la pelota llega a otro jugador se verifica que tenga posesion
+            # Pero la unica forma de que tenga posesion es que el 
+
+            # Si es diferente jugador y además el closest no es el medium
+            elif closest_player.id != self.lastPlayerWithBall.id:
+                self.ball.framesInPossession = 1
+                self.mediumPlayer = closest_player
+                
+                # if  self.ball.framesInPossession <= 2:
+
+            
+            # Si el jugador mas cercano es diferente al ultimo guardado
+            # y ademas ya la tuvo alguien suficiente tiempo
+            if closest_player.id != self.lastPlayerWithBall.id and self.ball.framesInPossession > 2:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
@@ -223,8 +241,6 @@ class Match:
                 print(newPass)
 
                 # Variabe video_info
-
-
 
                 if newPass.valid:
                     print("Guardando pase")
@@ -237,12 +253,16 @@ class Match:
                 self.ball.framesInPossession = 1
                 # Codigo para agregar un pase
                 self.ball.framesInTransit = 0
-            else:
-                self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
+                
+                self.mediumPlayer = closest_player
+            # Cambia de jugador por un instante (de paso)
+            # else:
+                # self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
 
-            if self.ball.framesInPossession >= 2:
-                self.ball.inPossession = True
 
+            self.ball.inPossession = True
+        
+        # Pelota no cerca de la zona
         else:
             self.ball.inPossession = False
 
