@@ -263,6 +263,22 @@ class PlayerClassifier:
                 return False
             
         return True
+    
+    def few_players_in_team(self, match, tracked_objects, top_two_clusters):
+        team_counts = Counter()
+        player_ids = set(match.players.keys())
+        
+        for obj in tracked_objects:
+            if obj.id in player_ids:
+                player_team = match.players[obj.id].team
+                if player_team in top_two_clusters:
+                    team_counts[player_team] += 1
+        
+        for team in top_two_clusters:
+            if team_counts[team] < 3:
+                return True
+        
+        return False
 
     def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids):
 
