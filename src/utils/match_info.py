@@ -117,7 +117,8 @@ class Match:
             current_ball_id = self.ball.id
             if len(ball_candidates) == 1:
                 if ball_candidates[0] != current_ball_id:
-                    self.assignBall(ball_id=ball_candidates[0])
+                    self.ball.id = ball_candidates[0] # Solo cambiar Id
+                    # self.assignBall(ball_id=ball_candidates[0])
             elif len(ball_candidates) > 1:
                 pass
 
