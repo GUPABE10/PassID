@@ -197,8 +197,7 @@ class Match:
         # Si hay un jugador cercano
         if min_distance < threshold:
 
-            if self.ball.framesInPossession >= 3:
-                self.ball.inPossession = True
+            
 
             # print(f"Ball data: {self.ball}")
 
@@ -211,7 +210,7 @@ class Match:
             # Si el mismo jugador sigue teniendo la pelota
             elif closest_player.id == self.lastPlayerWithBall.id:
                 self.ball.framesInPossession += 1
-                
+                self.ball.inPossession = True
 
             # Si es diferente jugador
             elif self.ball.framesInPossession >= 3:
@@ -240,6 +239,9 @@ class Match:
                 self.ball.framesInTransit = 0
             else:
                 self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
+
+            if self.ball.framesInPossession >= 3:
+                self.ball.inPossession = True
 
         else:
             self.ball.inPossession = False
