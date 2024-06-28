@@ -78,5 +78,5 @@ class Pass:
     def __str__(self):
         return (f"Pass(initPlayer={self.initPlayer} "
                 f"finalPlayer={self.finalPlayer}"
-                f"frames={self.frames}, durationPass={self.durationPass}, initFrame={self.initFrame}, "
-                f"secondInitPass={self.secondInitPass}, valid={self.valid})")
+                f"frames={self.frames}, initFrame={self.initFrame}, "
+                f"secondInitPass={self.secondInitPass}, secondFinalPass={self.secondFinalPass}, valid={self.valid})")
