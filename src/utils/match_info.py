@@ -210,7 +210,7 @@ class Match:
                 self.ball.framesInPossession+=1
 
             # Si es diferente jugador
-            elif self.ball.framesInPossession >= 3:
+            elif self.ball.framesInPossession >= 2:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
