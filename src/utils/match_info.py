@@ -190,11 +190,11 @@ class Match:
         
         threshold = 0.03  # Experimental puede ser menor a 0.05 pero no mayor.
         
-        print(f"Closest Player: {closest_player}")
-        print(f"Last Player with Ball: {self. lastPlayerWithBall}")
-        print(f"min_distance: {min_distance}")
-        print(f"Is Ball on possession? {self.ball.inPossession}")
-        print(f"Frames in possession: {self.ball.framesInPossession}")
+        # print(f"Closest Player: {closest_player}")
+        # print(f"Last Player with Ball: {self. lastPlayerWithBall}")
+        # print(f"min_distance: {min_distance}")
+        # print(f"Is Ball on possession? {self.ball.inPossession}")
+        # print(f"Frames in possession: {self.ball.framesInPossession}")
 
         # Si hay un jugador cercano a la pelota
         if min_distance < threshold:
@@ -253,7 +253,7 @@ class Match:
                 self.ball.framesInPossession = 1
                 # Codigo para agregar un pase
                 self.ball.framesInTransit = 0
-                
+
                 self.mediumPlayer = closest_player
             # Cambia de jugador por un instante (de paso)
             # else:
