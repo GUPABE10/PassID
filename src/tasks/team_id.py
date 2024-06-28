@@ -339,8 +339,9 @@ class PlayerClassifier:
             # Verificamos si missing_ids no está vacío
             if missing_ids:
                 for obj in tracked_objects:
-                    if obj.id in missing_ids:
+                    if obj.id in missing_ids and obj.label == 1:
                         # print(f"missing id: {obj.id}")
+
                         assigned_cluster = self.get_cluster_for_object(obj, labels, tracked_objects, person_instances)
                         # print(f"Cluster del id: {assigned_cluster}")
 

@@ -128,7 +128,7 @@ class PassDetection(BaseTracker):
                 # break
 
             if self.testMode:
-                frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
+                # frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
                 frame = self.draw_ball_possession(frame, tracked_objects)
                 frame = self.draw_teams(frame, tracked_objects)
                 frame = self.draw_pass_info(frame)
@@ -194,7 +194,7 @@ class PassDetection(BaseTracker):
         for obj in tracked_objects:
             obj_id = obj.id
             label = obj.label
-            if obj_id not in player_ids and obj_id not in extra_ids and obj_id != ball_id and label == 1:
+            if obj_id not in player_ids and obj_id not in extra_ids and obj_id != ball_id:
                 missing_ids.add(obj_id)
 
         return missing_ids
