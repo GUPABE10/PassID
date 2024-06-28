@@ -145,7 +145,7 @@ class Match:
             # print(f"Actual Tracked Objects: {tracked_objects}")
 
             self.ball.inPossession = False
-            self.ball.framesInPossession = 0
+            # self.ball.framesInPossession = 0
             self.ball.initFrameNumber = frame_number
             self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
             return
@@ -207,10 +207,10 @@ class Match:
 
             # Si el mismo jugador sigue teniendo la pelota
             elif closest_player.id == self.lastPlayerWithBall.id:
-                self.ball.framesInPossession+=1
+                self.ball.framesInPossession += 1
 
             # Si es diferente jugador
-            elif self.ball.framesInPossession >= 2:
+            elif self.ball.framesInPossession >= 3:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
@@ -243,7 +243,7 @@ class Match:
 
             # Es decir que por lo menos alguien tuvo antes la pelota
             if self.lastPlayerWithBall is not None:
-                self.ball.framesInPossession = 0
+                # self.ball.framesInPossession = 0
                 self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
                 self.ball.initFrameNumber = frame_number
             else:
