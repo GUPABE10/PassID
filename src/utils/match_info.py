@@ -190,7 +190,7 @@ class Match:
         threshold = 0.03  # Experimental puede ser menor a 0.05 pero no mayor.
         
         # print(f"Closest Player: {closest_player}")
-        # print(f"Last Player with Ball: {self.lastPlayerWithBall}")
+        # print(f"Last Player with Ball: {self. lastPlayerWithBall}")
         # print(f"min_distance: {min_distance}")
         # print(f"Is Ball on possession? {self.ball.inPossession}")
         # print(f"Frames in possession: {self.ball.framesInPossession}")
@@ -213,7 +213,7 @@ class Match:
                 self.ball.inPossession = True
 
             # Si es diferente jugador
-            elif self.ball.framesInPossession >= 3:
+            elif self.ball.framesInPossession >= 2:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
@@ -240,7 +240,7 @@ class Match:
             else:
                 self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
 
-            if self.ball.framesInPossession >= 3:
+            if self.ball.framesInPossession >= 2:
                 self.ball.inPossession = True
 
         else:
