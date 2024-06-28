@@ -144,8 +144,10 @@ class Match:
             # print(f"No se encontró al balón dentro de Tracked_objects. Id = {self.ball.id}")
             # print(f"Actual Tracked Objects: {tracked_objects}")
 
-            # self.ball.inPossession = False
-
+            self.ball.inPossession = False
+            self.ball.framesInPossession = 0
+            self.ball.initFrameNumber = frame_number
+            self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
             return
         
         ball_x1, ball_y1, ball_x2, ball_y2 = ball_position.estimate.flatten().tolist()
@@ -208,8 +210,7 @@ class Match:
                 self.ball.framesInPossession+=1
 
             # Si es diferente jugador
-            else:
-                
+            elif self.ball.framesInPossession >= 3:
                 print("Inicio de pase")
                 durationPass = video_info.frames_to_seconds(self.ball.framesInTransit)
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
@@ -232,15 +233,10 @@ class Match:
                 self.lastPlayerWithBall = closest_player
                 self.ball.framesInPossession = 1
                 # Codigo para agregar un pase
-
-                
-
-
                 self.ball.framesInTransit = 0
-
-
-            if self.ball.framesInPossession >= 1:
                 self.ball.inPossession = True
+            else:
+                self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
 
         else:
             self.ball.inPossession = False
