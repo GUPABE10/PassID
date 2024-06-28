@@ -128,7 +128,7 @@ class PassDetection(BaseTracker):
                 # break
 
             if self.testMode:
-                # frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
+                frame = self.draw_frame(self.track_points, frame, detections, tracked_objects)
                 frame = self.draw_ball_possession(frame, tracked_objects)
                 frame = self.draw_teams(frame, tracked_objects)
                 frame = self.draw_pass_info(frame)
@@ -253,7 +253,7 @@ class PassDetection(BaseTracker):
 
         # Define the size and position of the rectangle
         top_left_corner = (frame.shape[1] - 250, 10)
-        bottom_right_corner = (frame.shape[1] - 10, 110)
+        bottom_right_corner = (frame.shape[1] - 10, 190)
         
         # Draw the rectangle (background for text)
         cv2.rectangle(frame, top_left_corner, bottom_right_corner, (255, 255, 255), -1)  # White rectangle
