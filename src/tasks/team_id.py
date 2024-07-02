@@ -318,7 +318,7 @@ class PlayerClassifier:
                     match.add_extra_people(extra_id=obj.id)
 
         elif self.few_players_in_team(match,tracked_objects, top_two_clusters): # Reidentificacion
-            print("Reidentificación y reasignación de equipos")
+            # print("Reidentificación y reasignación de equipos")
 
             for obj in tracked_objects:
                 x1, y1, x2, y2 = obj.estimate.flatten().tolist()

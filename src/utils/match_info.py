@@ -127,7 +127,7 @@ class Match:
     
 
     
-    def update_ball_possession(self, tracked_objects, video_info, frame_number):
+    def update_ball_possession(self, tracked_objects, video_info, frame_number, out_file):
         if self.ball is None:
             # print(f"Balón no identificado aún: {self.ball}")
             return
@@ -249,7 +249,7 @@ class Match:
                 if newPass.valid:
                     print("Guardando pase")
                     self.newPass = newPass
-                    self.newPass.save_to_csv("passes.csv")
+                    self.newPass.save_to_csv(out_file)
                 else:
                     pass
 

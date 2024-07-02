@@ -7,6 +7,7 @@ Recibe:
 
 
 """
+import os
 import numpy as np
 import cv2
 import random
@@ -38,6 +39,12 @@ class PassDetection(BaseTracker):
         self.classifier = PlayerClassifier()
 
         self.input_path = input_path
+
+        # Obtiene el nombre del archivo sin la extensión
+        file_name = os.path.splitext(os.path.basename(self.input_path))[0]
+        # Agrega "_passes" al final del nombre del archivo
+        self.outPasses = f"{file_name}_passes.csv"
+
         self.conf_threshold = conf_threshold
         self.track_points = track_points
         self.distance_threshold = distance_threshold
@@ -172,8 +179,10 @@ class PassDetection(BaseTracker):
             # print("After new objects: ")
             # print(self.match)
 
+        
+
         # Ahora debo definir si un balón está en posesion
-        self.match.update_ball_possession(tracked_objects, self.videoInfo, frame_number) 
+        self.match.update_ball_possession(tracked_objects, self.videoInfo, frame_number, self.outPasses) 
 
         # if self.match.ball.inPossession:
         #     print("Tengo el balon")
