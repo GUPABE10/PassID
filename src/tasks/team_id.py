@@ -23,6 +23,9 @@ class PlayerClassifier:
         self.predictor = DefaultPredictor(self.cfg)
         setup_logger()
 
+        # Almacena los histogramas iniciales de los clusters
+        self.initial_clusters_histograms = {}
+
     @staticmethod
     def calculate_histogram(segment_mask, image):
         mask = segment_mask.astype(np.uint8) * 255
@@ -313,6 +316,33 @@ class PlayerClassifier:
                     match.add_player(player_id=obj.id, team=assigned_cluster)
                 else:
                     match.add_extra_people(extra_id=obj.id)
+
+        elif self.few_players_in_team(match,tracked_objects, top_two_clusters): # Reidentificacion
+            print("Reidentificación y reasignación de equipos")
+
+            for obj in tracked_objects:
+                x1, y1, x2, y2 = obj.estimate.flatten().tolist()
+                obj_box = [x1, y1, x2, y2]
+                max_iou = 0
+                assigned_cluster = -1
+                
+                for i in range(len(person_instances)):
+                    box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
+                    iou = self.calculate_iou(obj_box, box)
+                    if iou > max_iou:
+                        max_iou = iou
+                        assigned_cluster = labels[i]
+                
+                if assigned_cluster in top_two_clusters:
+                    if obj.id in player_ids:
+                        # Reasignar el equipo del jugador existente
+                        match.players[obj.id].team = assigned_cluster
+                    elif obj.id in missing_ids:
+                        # Agregar el nuevo jugador
+                        match.add_player(player_id=obj.id, team=assigned_cluster)
+                else:
+                    if obj.id in missing_ids:
+                        match.add_extra_people(extra_id=obj.id)
         else:
             # Crear un diccionario para mapear los clústeres a los equipos existentes
             # print("Previous Players")
