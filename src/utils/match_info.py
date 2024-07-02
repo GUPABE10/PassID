@@ -40,6 +40,8 @@ class Match:
         self.newPass = None
         self.mediumPlayer = None # Para guardar a algun jugador de paso
 
+        self.initPass = False
+
     def add_player(self, player_id, team):
         self.players[player_id] = Player(player_id, team)
         
@@ -262,6 +264,8 @@ class Match:
                 self.ball.framesInTransit = 0
 
                 self.mediumPlayer = closest_player
+
+                self.initPass = False
             # Cambia de jugador por un instante (de paso)
             # else:
                 # self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
@@ -276,9 +280,13 @@ class Match:
             # Es decir que por lo menos alguien tuvo antes la pelota
             if self.lastPlayerWithBall is not None:
                 # self.ball.framesInPossession = 0
+
+                if not self.initPass:
+                    self.ball.initFrameNumber = frame_number
+                    print(f"Inicializacion: {self.ball.initFrameNumber}")
+                    self.initPass = True
+
                 self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
-                self.ball.initFrameNumber = frame_number
-                print(f"Inicializacion: {self.ball.initFrameNumber}")
             else:
                 pass
 
