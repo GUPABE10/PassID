@@ -81,6 +81,7 @@ class PassDetection(BaseTracker):
         
         # Incializar Clase Video
         self.videoInfo = VideoInfo(video_path = input_path)
+        print(self.videoInfo)
 
 
         self.stop = False

@@ -240,6 +240,9 @@ class Match:
                 secondInitPass = video_info.frames_to_seconds(self.ball.initFrameNumber)
                 secondFinalPass = video_info.frames_to_seconds(frame_number)
 
+                print(f"Frame Inicial: {self.ball.initFrameNumber} - Segundos: {secondInitPass}")
+                print(f"Frame Final: {frame_number} - Segundos: {secondFinalPass}")
+
                 newPass = Pass(initPlayer = self.lastPlayerWithBall, finalPlayer = closest_player, frames = self.ball.framesInTransit, secondFinalPass = secondFinalPass, initFrame = self.ball.initFrameNumber, secondInitPass = secondInitPass)
 
                 print(newPass)
@@ -275,6 +278,7 @@ class Match:
                 # self.ball.framesInPossession = 0
                 self.ball.framesInTransit += 1  # Para saber cuanto tiempo tardó el pase
                 self.ball.initFrameNumber = frame_number
+                print(f"Inicializacion: {self.ball.initFrameNumber}")
             else:
                 pass
 
