@@ -121,12 +121,13 @@ class HybridDetector:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         yolo_results = self.yolo_model(img, visualize=False, device=self.device, verbose=False)
-        yolo_boxes = yolo_results[0].boxes.xyxy.float()  # Convert to float
-        yolo_confs = yolo_results[0].boxes.conf.float()  # Convert to float
-        yolo_labels = yolo_results[0].boxes.cls.long()  # Convert to long
+        yolo_boxes = yolo_results[0].boxes.xyxy.float().to(self.device)  # Convert to float and move to device
+        yolo_confs = yolo_results[0].boxes.conf.float().to(self.device)  # Convert to float and move to device
+        yolo_labels = yolo_results[0].boxes.cls.long().to(self.device)  # Convert to long and move to device
+
 
         if isinstance(yolo_labels, np.ndarray):
-            yolo_labels = torch.tensor(yolo_labels, dtype=torch.long)
+            yolo_labels = torch.tensor(yolo_labels, dtype=torch.long).to(self.device)
 
         person_mask = (yolo_labels == 0) & (yolo_confs >= conf_threshold)
         person_boxes = yolo_boxes[person_mask]
@@ -138,11 +139,12 @@ class HybridDetector:
         img_tensor = img_tensor.to(self.device)
 
         with torch.no_grad():
-            rcnn_prediction = self.faster_rcnn_model([img_tensor])
+            rcnn_prediction = self.faster_rcnn_model([img_tensor]).to(self.device)
         
-        rcnn_boxes = rcnn_prediction[0]["boxes"].float()  # Convert to float
-        rcnn_scores = rcnn_prediction[0]["scores"].float()  # Convert to float
-        rcnn_labels = rcnn_prediction[0]["labels"].long()  # Convert to long
+        rcnn_boxes = rcnn_prediction[0]["boxes"].float().to(self.device)  # Convert to float and move to device
+        rcnn_scores = rcnn_prediction[0]["scores"].float().to(self.device)  # Convert to float and move to device
+        rcnn_labels = rcnn_prediction[0]["labels"].long().to(self.device)  # Convert to long and move to device
+
 
         ball_mask = (rcnn_labels == 37) & (rcnn_scores >= conf_threshold)  # 37 es el label de "sports ball"
         ball_boxes = rcnn_boxes[ball_mask]
@@ -155,7 +157,8 @@ class HybridDetector:
             if self.is_green_background(img, bbox.cpu().numpy().astype(int), padding):
                 valid_ball_indices.append(i)
 
-        valid_ball_indices = torch.tensor(valid_ball_indices, dtype=torch.long)
+        valid_ball_indices = torch.tensor(valid_ball_indices, dtype=torch.long).to(self.device)
+
         ball_boxes = ball_boxes[valid_ball_indices]
         ball_scores = ball_scores[valid_ball_indices]
         ball_labels = ball_labels[valid_ball_indices]
