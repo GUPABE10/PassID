@@ -139,7 +139,7 @@ class HybridDetector:
         img_tensor = img_tensor.to(self.device)
 
         with torch.no_grad():
-            rcnn_prediction = self.faster_rcnn_model([img_tensor]).to(self.device)
+            rcnn_prediction = self.faster_rcnn_model([img_tensor])#.to(self.device)
         
         rcnn_boxes = rcnn_prediction[0]["boxes"].float().to(self.device)  # Convert to float and move to device
         rcnn_scores = rcnn_prediction[0]["scores"].float().to(self.device)  # Convert to float and move to device
