@@ -89,6 +89,18 @@ class PassDetection(BaseTracker):
         self.team_colors = {}
 
 
+        # Definir colores contrastantes
+        self.contrast_colors = [
+            (255, 0, 0),   # Rojo
+            (0, 255, 0),   # Verde
+            (0, 0, 255),   # Azul
+            (255, 255, 0), # Amarillo
+            (255, 0, 255)  # Magenta
+        ]
+
+        self.color_idx = 0  # Índice para recorrer los colores contrastantes
+
+
 
     def detect_passes(self):
 
@@ -237,9 +249,10 @@ class PassDetection(BaseTracker):
             if id in self.match.players:
                 player = self.match.players[id]
                 
-                # Asignar un color si el equipo no tiene uno aún
+                # Asignar un color contrastante si el equipo no tiene uno aún
                 if player.team not in self.team_colors:
-                    self.team_colors[player.team] = self.generate_random_color()
+                    self.team_colors[player.team] = self.contrast_colors[self.color_idx]
+                    self.color_idx = (self.color_idx + 1) % len(self.contrast_colors)
 
                 color = self.team_colors[player.team]
 
@@ -251,6 +264,7 @@ class PassDetection(BaseTracker):
                 cv2.putText(frame, "Ball", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale, ball_color, 2)
 
         return frame
+
     
     def generate_random_color(self):
         """Genera un color RGB aleatorio."""
