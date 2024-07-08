@@ -230,6 +230,8 @@ class PlayerClassifier:
             hist = self.calculate_histogram(mask, image)
             histograms.append(hist)
 
+        if len(histograms) == 0:
+            return match
 
         # Guardar histogramas y etiquetas iniciales
         if firstFrame:  # Asumiendo que este es el primer frame o uno de los primeros donde se hace la clusterización inicial
