@@ -94,7 +94,7 @@ class PassDetection(BaseTracker):
             (255, 0, 0),   # Rojo
             (0, 255, 0),   # Verde
             (255, 255, 0), # Amarillo
-            (255, 0, 255)  # Magenta
+            (255, 0, 255),  # Magenta
             (0, 0, 255),   # Azul
         ]
 
