@@ -95,7 +95,7 @@ class PassDetection(BaseTracker):
             (0, 255, 0),   # Verde
             (255, 255, 0), # Amarillo
             (255, 0, 255),  # Magenta
-            (0, 0, 255),   # Azul
+            (0, 255, 255),   # 
         ]
 
         self.color_idx = 0  # Índice para recorrer los colores contrastantes
