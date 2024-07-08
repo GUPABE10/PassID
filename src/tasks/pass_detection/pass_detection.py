@@ -91,11 +91,11 @@ class PassDetection(BaseTracker):
 
         # Definir colores contrastantes
         self.contrast_colors = [
-            (255, 0, 0),   # Rojo
+            (0, 0, 255),   # Rojo
             (0, 255, 0),   # Verde
-            (255, 255, 0), # Amarillo
+            (0, 255, 255), # Amarillo
             (255, 0, 255),  # Magenta
-            (0, 255, 255),   # 
+            (255, 255, 0),   # 
         ]
 
         self.color_idx = 0  # Índice para recorrer los colores contrastantes
