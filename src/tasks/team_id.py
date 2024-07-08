@@ -13,6 +13,8 @@ from skimage.metrics import structural_similarity as ssim
 
 from collections import defaultdict, Counter
 
+from sklearn.neighbors import KNeighborsClassifier
+
 class PlayerClassifier:
     def __init__(self, model_config="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml", device='cpu'):
         self.cfg = get_cfg()
@@ -25,6 +27,10 @@ class PlayerClassifier:
 
         # Almacena los histogramas iniciales de los clusters
         self.initial_clusters_histograms = {}
+
+        self.knn = None
+        self.initial_histograms = []
+        self.initial_labels = []
 
     @staticmethod
     def calculate_histogram(segment_mask, image):
@@ -179,7 +185,7 @@ class PlayerClassifier:
         plt.show()
         pass
 
-    def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False, missing_ids=set(), frame_number=0):
+    def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False, missing_ids=set(), frame_number=0, firstFrame = False):
 
         # Lectura de imagen por path
         if image_path:
@@ -223,11 +229,25 @@ class PlayerClassifier:
             mask = person_instances.pred_masks[i].cpu().numpy()
             hist = self.calculate_histogram(mask, image)
             histograms.append(hist)
-            
-        # Aplicar HDBSCAN a los histogramas
-        clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
-        labels = clusterer.fit_predict(histograms)
-        # print(labels)
+
+
+        # Guardar histogramas y etiquetas iniciales
+        if firstFrame:  # Asumiendo que este es el primer frame o uno de los primeros donde se hace la clusterización inicial
+            self.initial_histograms = histograms
+            clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
+            labels = clusterer.fit_predict(histograms)
+            self.initial_labels = labels
+
+            # Entrenar el modelo KNN
+            self.knn = KNeighborsClassifier(n_neighbors=1)
+            self.knn.fit(histograms, labels)
+        else:
+            labels = self.knn.predict(histograms)
+
+        # # Aplicar HDBSCAN a los histogramas
+        # clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
+        # labels = clusterer.fit_predict(histograms)
+
         
         # Encontrar los dos clusters más grandes omitiendo el label -1
         unique_labels, counts = np.unique(labels, return_counts=True)

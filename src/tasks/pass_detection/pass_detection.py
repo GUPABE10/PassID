@@ -152,7 +152,9 @@ class PassDetection(BaseTracker):
                 
     def assign_objects(self, image, tracked_objects, visualize_cluster, missing_ids, frame_number):
         # Aqui se puede hacer una prueba de funcionamiento para verificar que se hace bien
-        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=False, missing_ids = missing_ids, frame_number = frame_number)
+
+        # Si isDetectionStarted es false, significa que apenas es el primer frame a evaluar
+        self.match = self.classifier.classify(image=image, tracked_objects=tracked_objects, match = self.match, visualize=False, missing_ids = missing_ids, frame_number = frame_number, firstFrame= not self.isDetectionStarted )
         # print("After Classify")
         # print(self.match)
 
