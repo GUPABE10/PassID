@@ -93,9 +93,9 @@ class PassDetection(BaseTracker):
         self.contrast_colors = [
             (255, 0, 0),   # Rojo
             (0, 255, 0),   # Verde
-            (0, 0, 255),   # Azul
             (255, 255, 0), # Amarillo
             (255, 0, 255)  # Magenta
+            (0, 0, 255),   # Azul
         ]
 
         self.color_idx = 0  # Índice para recorrer los colores contrastantes
@@ -233,7 +233,7 @@ class PassDetection(BaseTracker):
 
                         font_scale = frame.shape[0] / 800
                         # Escribe "EN POSESION" arriba del bounding box del jugador
-                        cv2.putText(frame, "EN POSESION", (x1, y1 - 20), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 0, 0), 2)
+                        cv2.putText(frame, "EN POSESION", (x1, y1 - 40), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 0, 0), 2)
                         break
         return frame
 
