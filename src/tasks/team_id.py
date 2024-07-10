@@ -28,9 +28,12 @@ class PlayerClassifier:
         # Almacena los histogramas iniciales de los clusters
         self.initial_clusters_histograms = {}
 
-        self.knn = None
+        self.knn = KNeighborsClassifier(n_neighbors=1)
         self.initial_histograms = []
         self.initial_labels = []
+
+        self.histograms = []
+        self.labels = []
 
     @staticmethod
     def calculate_histogram(segment_mask, image):
@@ -230,7 +233,8 @@ class PlayerClassifier:
             hist = self.calculate_histogram(mask, image)
             histograms.append(hist)
 
-        if len(histograms) == 0:
+        # No se puede inicializar hasta que existan por lo menos 8 jugadores detectadis
+        if firstFrame and len(histograms) < 8:
             return match
 
         # Guardar histogramas y etiquetas iniciales
@@ -239,12 +243,18 @@ class PlayerClassifier:
             clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
             labels = clusterer.fit_predict(histograms)
             self.initial_labels = labels
+            
+            self.histograms = histograms
+            self.labels = labels
 
-            # Entrenar el modelo KNN
-            self.knn = KNeighborsClassifier(n_neighbors=1)
-            self.knn.fit(histograms, labels)
         else:
             labels = self.knn.predict(histograms)
+            # Unir los nuevos histogramas y etiquetas a los existentes
+            self.histograms.extend(histograms)
+            self.labels.extend(labels)
+
+        # Entrenar modelo con todos los histogramas y labels
+        self.knn.fit(self.histograms, self.labels)
 
         # # Aplicar HDBSCAN a los histogramas
         # clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
