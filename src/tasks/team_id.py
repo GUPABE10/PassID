@@ -242,13 +242,19 @@ class PlayerClassifier:
             self.initial_histograms = histograms
             clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
             labels = clusterer.fit_predict(histograms)
-            self.initial_labels = labels
+            self.initial_labels = labels.tolist()
             
             self.histograms = histograms
-            self.labels = labels
+            self.labels = labels.tolist()  # Convertir a lista
 
         else:
             labels = self.knn.predict(histograms)
+            # Convertir self.labels y labels a listas si no lo son
+            if isinstance(self.labels, np.ndarray):
+                self.labels = self.labels.tolist()
+            if isinstance(labels, np.ndarray):
+                labels = labels.tolist()
+
             # Unir los nuevos histogramas y etiquetas a los existentes
             self.histograms.extend(histograms)
             self.labels.extend(labels)
