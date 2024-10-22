@@ -1,0 +1,12 @@
+Inicio,Final,Tipo
+0,1,Terrestre
+2,3,Terrestre
+4,8,Aereo
+8,10,Terrestre
+11,14,Terrestre
+16,17,Terrestre
+17,19,Terrestre
+19,20,Terrestre
+21,24,Aereo
+26,28,Aereo
+30,30,Terrestre
