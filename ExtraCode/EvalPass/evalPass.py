@@ -1,54 +1,57 @@
 import pandas as pd
 import os
 
+# Function to count total detected passes in program output files
 def count_total_detected(program_dir):
     total_detected = 0
     for program_file in os.listdir(program_dir):
         if program_file.endswith("_passes.csv"):
             program_path = os.path.join(program_dir, program_file)
             program_df = pd.read_csv(program_path)
-            total_detected += len(program_df)
+            total_detected += len(program_df)  # Count rows for each detected pass
     return total_detected
 
+# Function to count total ground truth (GT) passes
 def count_total_gt(gt_dir):
     total_gt = 0
     for gt_file in os.listdir(gt_dir):
         if gt_file.endswith(".csv"):
             gt_path = os.path.join(gt_dir, gt_file)
             gt_df = pd.read_csv(gt_path)
-            total_gt += len(gt_df)
+            total_gt += len(gt_df)  # Count rows for each GT pass
     return total_gt
 
+# Compare passes between GT and program output within a specified tolerance
 def compare_passes(gt_file, program_output_file, tolerance=1):
-    # Leer archivos CSV
     gt_df = pd.read_csv(gt_file)
     program_df = pd.read_csv(program_output_file)
-    
-    # Renombrar columnas para facilitar la comparación
+
+    # Rename columns for consistency
     gt_df.columns = ['Start', 'End', 'Type']
     program_df.columns = ['Passer', 'Receiver', 'Start', 'Duration', 'End']
 
-    # Inicializar listas de resultados
+    # Initialize result lists
     true_positives = []
     false_positives = []
     false_negatives = []
 
-    # Inicializar contadores de tipos
+    # Initialize counters by pass type
     tp_aereo = 0
     tp_terrestre = 0
     fn_aereo = 0
     fn_terrestre = 0
 
-    # Convertir los tiempos a float
+    # Convert times to float for comparison
     gt_df['Start'] = gt_df['Start'].astype(float)
     program_df['Start'] = program_df['Start'].astype(float)
 
-    # Comparar los pases
+    # Compare GT and program passes
     for _, gt_row in gt_df.iterrows():
         matched = False
         for _, prog_row in program_df.iterrows():
             if abs(gt_row['Start'] - prog_row['Start']) <= tolerance:
                 true_positives.append(prog_row)
+                # Count true positives by pass type
                 if gt_row['Type'] == 'Aereo':
                     tp_aereo += 1
                 elif gt_row['Type'] == 'Terrestre':
@@ -62,7 +65,7 @@ def compare_passes(gt_file, program_output_file, tolerance=1):
             elif gt_row['Type'] == 'Terrestre':
                 fn_terrestre += 1
 
-    # Encontrar false positives
+    # Identify false positives by exclusion from true positives
     for _, prog_row in program_df.iterrows():
         matched = False
         for tp in true_positives:
@@ -72,7 +75,7 @@ def compare_passes(gt_file, program_output_file, tolerance=1):
         if not matched:
             false_positives.append(prog_row)
 
-    # Convertir listas a DataFrames para facilitar el manejo
+    # Convert results to DataFrames for easier analysis
     true_positives_df = pd.DataFrame(true_positives)
     false_positives_df = pd.DataFrame(false_positives)
     false_negatives_df = pd.DataFrame(false_negatives)
@@ -80,6 +83,7 @@ def compare_passes(gt_file, program_output_file, tolerance=1):
     return (true_positives_df, false_positives_df, false_negatives_df,
             tp_aereo, tp_terrestre, fn_aereo, fn_terrestre)
 
+# Process passes for all files, comparing GT and detected passes
 def process_passes(gt_dir, program_dir, tolerance=1):
     total_tp = 0
     total_fp = 0
@@ -98,6 +102,7 @@ def process_passes(gt_dir, program_dir, tolerance=1):
             program_path = os.path.join(program_dir, program_file)
             
             if os.path.exists(program_path):
+                # Compare passes and count TP, FP, FN for each type
                 tp, fp, fn, tp_aereo, tp_terrestre, fn_aereo, fn_terrestre = compare_passes(gt_path, program_path, tolerance)
                 
                 total_tp += len(tp)
@@ -109,7 +114,7 @@ def process_passes(gt_dir, program_dir, tolerance=1):
                 total_fn_aereo += fn_aereo
                 total_fn_terrestre += fn_terrestre
             else:
-                # Si el archivo no existe en JugadasOut, todos los pases de GT son falsos negativos
+                # If output file does not exist, count all GT passes as false negatives
                 gt_df = pd.read_csv(gt_path)
                 total_fn += len(gt_df)
                 
@@ -122,6 +127,7 @@ def process_passes(gt_dir, program_dir, tolerance=1):
     return (total_tp, total_fp, total_fn,
             total_tp_aereo, total_tp_terrestre, total_fn_aereo, total_fn_terrestre)
 
+# Count total aerial passes from GT
 def count_total_aereo(gt_dir):
     total_aereo = 0
     for gt_file in os.listdir(gt_dir):
@@ -131,6 +137,7 @@ def count_total_aereo(gt_dir):
             total_aereo += len(gt_df[gt_df['Tipo'] == 'Aereo'])
     return total_aereo
 
+# Count total terrestrial passes from GT
 def count_total_terrestre(gt_dir):
     total_terrestre = 0
     for gt_file in os.listdir(gt_dir):
@@ -140,6 +147,7 @@ def count_total_terrestre(gt_dir):
             total_terrestre += len(gt_df[gt_df['Tipo'] == 'Terrestre'])
     return total_terrestre
 
+# Calculate precision and recall based on true positives, false positives, and false negatives
 def calculate_precision_recall(tp, fp, fn):
     if tp + fp > 0:
         precision = tp / (tp + fp)
@@ -153,6 +161,7 @@ def calculate_precision_recall(tp, fp, fn):
     
     return precision, recall
 
+# Calculate F1-score based on precision and recall
 def calculate_f1_score(precision, recall):
     if precision + recall > 0:
         f1_score = 2 * (precision * recall) / (precision + recall)
@@ -161,6 +170,7 @@ def calculate_f1_score(precision, recall):
     
     return f1_score
 
+# Calculate recall specifically based on true positives and false negatives
 def calculate_recall(tp, fn):
     if tp + fn > 0:
         recall = tp / (tp + fn)
@@ -168,75 +178,55 @@ def calculate_recall(tp, fn):
         recall = 0
     return recall
 
-# Directorios de entrada
+# Directories for ground truth and program output files
 gt_dir = 'GT'
 program_dir = 'JugadasOut'
 
-# Tolerancia en segundos (por defecto es 1)
+# Tolerance in seconds (default is 1)
 tolerance = 1
 
-# Ejecutar el proceso
+# Execute pass processing and comparisons
 results = process_passes(gt_dir, program_dir, tolerance)
 
 total_tp, total_fp, total_fn, total_tp_aereo, total_tp_terrestre, total_fn_aereo, total_fn_terrestre = results
 
-# Calcular precisión y recall
+# Calculate precision and recall
 precision, recall = calculate_precision_recall(total_tp, total_fp, total_fn)
 
-# Calcular F1-Score
+# Calculate F1-Score
 f1_score = calculate_f1_score(precision, recall)
 
-# Calcular recall para Aereos y Terrestres
+# Calculate recall for aerial and terrestrial passes
 recall_aereo = calculate_recall(total_tp_aereo, total_fn_aereo)
 recall_terrestre = calculate_recall(total_tp_terrestre, total_fn_terrestre)
 
-# Contar el total de pases detectados y el total de GT
+# Count total detected passes and total GT passes
 total_detected = count_total_detected(program_dir)
 total_gt = count_total_gt(gt_dir)
 
-# Contar el total de pases en GT que son Aereos y Terrestres
+# Count total aerial and terrestrial passes in GT
 total_aereo = count_total_aereo(gt_dir)
 total_terrestre = count_total_terrestre(gt_dir)
 
-# # Imprimir resultados
-# print("### Resultados Generales ###")
-# print(f"Total True Positives: {total_tp}")
-# print(f"Total False Positives: {total_fp}")
-# print(f"Total False Negatives: {total_fn}")
-# print(f"Total True Positives Aereo: {total_tp_aereo}")
-# print(f"Total True Positives Terrestre: {total_tp_terrestre}")
-# print(f"Total False Negatives Aereo: {total_fn_aereo}")
-# print(f"Total False Negatives Terrestre: {total_fn_terrestre}")
-# print(f"Precision: {precision:.4f}")
-# print(f"Recall: {recall:.4f}")
-# print(f"F1-Score: {f1_score:.4f}")
-# print(f"Total de Pases Detectados: {total_detected}")
-# print(f"Total de Pases en GT: {total_gt}")
-# print(f"Total de Pases Aereos en GT: {total_aereo}")
-# print(f"Total de Pases Terrestres en GT: {total_terrestre}")
-# print(f"Recall de Pases Aereos: {recall_aereo:.4f}")
-# print(f"Recall de Pases Terrestres: {recall_terrestre:.4f}")
-
-
-# Imprimir resultados
-print("### Resultados Generales ###")
+# Print results
+print("### General Results ###")
 print(f"{'Total True Positives:':<30} {total_tp}")
 print(f"{'Total False Positives:':<30} {total_fp}")
 print(f"{'Total False Negatives:':<30} {total_fn}")
-print("\n### Detalle de Tipos ###")
+print("\n### Type Details ###")
 print(f"{'Total True Positives Aereo:':<30} {total_tp_aereo}")
 print(f"{'Total True Positives Terrestre:':<30} {total_tp_terrestre}")
 print(f"{'Total False Negatives Aereo:':<30} {total_fn_aereo}")
 print(f"{'Total False Negatives Terrestre:':<30} {total_fn_terrestre}")
-print("\n### Métricas Generales ###")
+print("\n### General Metrics ###")
 print(f"{'Precision:':<30} {precision:.4f}")
 print(f"{'Recall:':<30} {recall:.4f}")
 print(f"{'F1-Score:':<30} {f1_score:.4f}")
-print("\n### Totales de Pases ###")
-print(f"{'Total de Pases Detectados:':<30} {total_detected}")
-print(f"{'Total de Pases en GT:':<30} {total_gt}")
-print(f"{'Total de Pases Aereos en GT:':<30} {total_aereo}")
-print(f"{'Total de Pases Terrestres en GT:':<30} {total_terrestre}")
-print("\n### Recall por Tipo ###")
-print(f"{'Recall de Pases Aereos:':<30} {recall_aereo:.4f}")
-print(f"{'Recall de Pases Terrestres:':<30} {recall_terrestre:.4f}")
+print("\n### Total Passes ###")
+print(f"{'Total Detected Passes:':<30} {total_detected}")
+print(f"{'Total GT Passes:':<30} {total_gt}")
+print(f"{'Total Aereo GT Passes:':<30} {total_aereo}")
+print(f"{'Total Terrestre GT Passes:':<30} {total_terrestre}")
+print("\n### Recall by Type ###")
+print(f"{'Recall Aereo Passes:':<30} {recall_aereo:.4f}")
+print(f"{'Recall Terrestre Passes:':<30} {recall_terrestre:.4f}")

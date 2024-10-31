@@ -10,67 +10,72 @@ import os
 from collections import OrderedDict
 
 def get_finetuned_model(backbone):
+    """
+    Load and return a finetuned Faster R-CNN model with specified backbone.
+
+    Parameters:
+    - backbone: String indicating the model backbone to use.
+
+    Returns:
+    - Finetuned Faster R-CNN model.
+    """
     if backbone == "mobilenetHigh":
-        model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
-    else: # FasterRCNN
-        print("finetuned resnet v2")
+        model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights=FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+    else:  # Default to FasterRCNN with ResNet backbone
+        print("Finetuned ResNet v2")
         model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
-    # Obtener el número de características de entrada del clasificador
+    
+    # Configure classifier with specified number of classes
     in_features = model.roi_heads.box_predictor.cls_score.in_features
-    num_classes = 3
-    # Reemplazar la cabeza del clasificador con una nueva
-    model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, num_classes)
+    num_classes = 3  # Adjust this based on the application needs
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     
+    # Load pre-trained weights
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    
     weight_name = "FasterRCNN_finetuned_2epochs_noda.pth"
-    
     ruta_modelo = os.path.join(script_dir, weight_name)
-    # model.load_state_dict(torch.load(ruta_modelo))
-    
     state_dict = torch.load(ruta_modelo)
-    # Ajustar las claves en el state_dict
+
+    # Adjust keys in state_dict for compatibility
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        name = k[7:] if k.startswith('module.') else k  # Elimina el prefijo 'module.' de cada clave
+        name = k[7:] if k.startswith('module.') else k  # Remove 'module.' prefix if present
         new_state_dict[name] = v
-    
-    # Cargar el state_dict ajustado
     model.load_state_dict(new_state_dict)
 
     return model
 
 class FasterRCNN:
     def __init__(self, model, backbone, device: Optional[str] = None):
+        """
+        Initialize a FasterRCNN instance with specified model and backbone.
+
+        Parameters:
+        - model: String specifying model type (e.g., pretrained or finetuned).
+        - backbone: Model backbone to use.
+        - device: Device for computation ('cpu' or 'cuda').
+        """
         if device is not None and "cuda" in device and not torch.cuda.is_available():
-            raise Exception(
-                "Selected device='cuda', but cuda is not available to Pytorch."
-            )
-        # automatically set device if its None
+            raise Exception("Selected device='cuda', but cuda is not available to Pytorch.")
         elif device is None:
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
         
         print(device)
+        self.device = device
+        self.isTuned = "finetuned" in model
 
-        self.device = device  # <-- Asignar el dispositivo aquí
-        if "finetuned" in model:
-            self.isTuned = True
-        else:
-            self.isTuned = False
-
-        # load model
+        # Load the model with appropriate settings
         try:
             if backbone == "mobilenetHigh":
                 print("MobileNet HD")
-                
                 if model == "FasterRCNN_pretrained":
-                    self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights = FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
+                    self.model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_fpn(weights=FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT)
                 elif model == "FasterRCNN_finetuned":
                     self.model = get_finetuned_model(backbone)
-            else: # resnet50v2
+            else:  # Default to resnet50v2
                 print("ResNet50 v2")
                 if model == "FasterRCNN_pretrained":
-                    self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn_v2(weights = FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
+                    self.model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT)
                 elif model == "FasterRCNN_finetuned":
                     self.model = get_finetuned_model(backbone)
                 
@@ -79,61 +84,53 @@ class FasterRCNN:
         except:
             raise Exception("Failed to load the pretrained Faster R-CNN model.")
 
-
-  
     def predict(
         self,
         img: Union[str, np.ndarray],
         conf_threshold: float = 0.5,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Run inference on the given image.
 
-        Args:
-            img (Union[str, np.ndarray]): Image path or numpy array.
-            conf_threshold (float, optional): Confidence threshold. Defaults to 0.5.
+        Parameters:
+        - img (Union[str, np.ndarray]): Path to image or numpy array.
+        - conf_threshold (float, optional): Confidence threshold. Defaults to 0.5.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: Returns detected boxes and their scores.
+        - Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: Detected boxes, scores, and labels.
         """
         
-        # If the input is a string (path), load the image
+        # If the input is a path, load and convert the image
         if isinstance(img, str):
             img = cv2.imread(img)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        # Convert the image to a PyTorch tensor
+        # Convert image to PyTorch tensor
         img_tensor = torch.from_numpy(img.transpose((2, 0, 1))).float() / 255.0
         img_tensor = img_tensor.to(self.device)
 
-        # Run the model
+        # Run model inference
         with torch.no_grad():
             prediction = self.model([img_tensor])
         
         boxes = prediction[0]["boxes"]
         scores = prediction[0]["scores"]
-        labels = prediction[0]["labels"] # New
-    
+        labels = prediction[0]["labels"]
 
-        if self.isTuned: ## 1 person # 2 ball
+        # Apply filtering for specific classes
+        if self.isTuned:  # Class 1 for person, class 2 for ball
             desired_classes = (labels == 1) | (labels == 2)
         else:
-            # Filter for desired classes: 1 for "person", 37 for "sports ball"
-            desired_classes = (labels == 1) | (labels == 37) # NO estoy seguro si 37 es pelota o 32
+            # For general detection, use classes 1 (person) and 37 (sports ball)
+            desired_classes = (labels == 1) | (labels == 37)
         
-        # if not desired_classes.any():
-            # print(labels)
-            # raise Exception("The model is not detecting the desired classes.")
-
         # Apply confidence threshold
         selected_indices = torch.where(desired_classes & (scores >= conf_threshold))[0]
         boxes = boxes[selected_indices]
         scores = scores[selected_indices]
         labels = labels[selected_indices]
         
-        # Replace label 37 with 2
+        # Convert label 37 to 2 if detected
         labels[labels == 37] = 2
 
         return boxes, scores, labels
-    
-    

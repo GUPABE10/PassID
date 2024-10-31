@@ -17,6 +17,13 @@ from sklearn.neighbors import KNeighborsClassifier
 
 class PlayerClassifier:
     def __init__(self, model_config="COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml", device='cpu'):
+        """
+        Initialize the PlayerClassifier with Detectron2 model for player detection.
+
+        Parameters:
+        - model_config: Path to the Detectron2 model configuration.
+        - device: Device to perform computations ('cpu' or 'cuda').
+        """
         self.cfg = get_cfg()
         self.cfg.merge_from_file(model_zoo.get_config_file(model_config))
         self.cfg.MODEL.DEVICE = device
@@ -25,7 +32,7 @@ class PlayerClassifier:
         self.predictor = DefaultPredictor(self.cfg)
         setup_logger()
 
-        # Almacena los histogramas iniciales de los clusters
+        # Stores initial histograms of clusters for team classification
         self.initial_clusters_histograms = {}
 
         self.knn = KNeighborsClassifier(n_neighbors=1)
@@ -37,6 +44,16 @@ class PlayerClassifier:
 
     @staticmethod
     def calculate_histogram(segment_mask, image):
+        """
+        Calculate the HSV histogram of a segmented region of the image.
+
+        Parameters:
+        - segment_mask: Binary mask for the segment.
+        - image: Original image.
+
+        Returns:
+        - Flattened normalized histogram.
+        """
         mask = segment_mask.astype(np.uint8) * 255
         segment = cv2.bitwise_and(image, image, mask=mask)
         hsv_segment = cv2.cvtColor(segment, cv2.COLOR_BGR2HSV)
@@ -46,6 +63,15 @@ class PlayerClassifier:
 
     @staticmethod
     def calculate_iou(boxA, boxB):
+        """
+        Calculate the Intersection over Union (IoU) of two bounding boxes.
+
+        Parameters:
+        - boxA, boxB: Bounding boxes in format [x1, y1, x2, y2].
+
+        Returns:
+        - IoU value.
+        """
         xA = max(boxA[0], boxB[0])
         yA = max(boxA[1], boxB[1])
         xB = min(boxA[2], boxB[2])
@@ -57,217 +83,86 @@ class PlayerClassifier:
         
         iou = interArea / float(boxAArea + boxBArea - interArea)
         return iou
-    
-    def testingImage(self,image):
-        # print(image.shape)
-        print(image.dtype, image.min(), image.max())
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image)
-        # plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        plt.axis('off')
-        plt.title('Original Image')
-        plt.savefig('image_analized.png')
-        plt.show()
-        # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        image_pt = cv2.imread("frame_7.jpg")
-        print(image_pt.dtype, image_pt.min(), image_pt.max())
-
-        if image.shape != image_pt.shape:
-            raise ValueError("Las imágenes deben tener el mismo tamaño y número de canales")
-
-        if np.array_equal(image, image_pt):
-            print("SON IGUALES")
-        else:
-            print("NO SON IGUALES")
-
-        if np.allclose(image, image_pt, atol=1e-5):
-            print("MEDIO IGUALES")
-        else:
-            print("MEDIO NO SON IGUALES")
-
-        difference = cv2.absdiff(image, image_pt)
-        plt.figure(figsize=(10, 10))
-        plt.imshow(cv2.cvtColor(difference, cv2.COLOR_BGR2RGB))
-        plt.axis('off')
-        plt.title('Diferencias entre imágenes')
-        plt.savefig('Diferencias.png')
-        plt.show()
-
-        hist1 = cv2.calcHist([image], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-        hist2 = cv2.calcHist([image_pt], [0, 1, 2], None, [256, 256, 256], [0, 256, 0, 256, 0, 256])
-        similarity = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        print(f"El índice de similitud de los histogramas es {similarity}")
-
-        image1_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image2_gray = cv2.cvtColor(image_pt, cv2.COLOR_BGR2GRAY)
-        score, diff = ssim(image1_gray, image2_gray, full=True)
-        diff = (diff * 255).astype("uint8")
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(diff, cmap='gray')
-        plt.axis('off')
-        plt.title('Diferencias usando SSIM')
-        plt.savefig('Diferencias_SSIM.png')
-        plt.show()
-        print(f"El índice SSIM entre las imágenes es {score}")
-
-        # image = cv2.imread("frame_7.jpg")
-
-        colors = ('b', 'g', 'r')
-        plt.figure(figsize=(20, 10))
-
-        for i, color in enumerate(colors):
-            hist1 = cv2.calcHist([image], [i], None, [256], [0, 256])
-            hist2 = cv2.calcHist([image_pt], [i], None, [256], [0, 256])
-            plt.subplot(1, 3, i+1)
-            plt.plot(hist1, color=color, label='Image 1')
-            plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
-            plt.title(f'Histogram for {color.upper()} channel')
-            plt.xlabel('Pixel value')
-            plt.ylabel('Frequency')
-            plt.legend()
-        plt.savefig('Histogramas.png')
-        plt.tight_layout()
-        plt.show()
-
-        def compare_histograms_detailed(image1, image2):
-            colors = ('b', 'g', 'r')
-            plt.figure(figsize=(20, 10))
-            
-            for i, color in enumerate(colors):
-                hist1 = cv2.calcHist([image1], [i], None, [256], [0, 256])
-                hist2 = cv2.calcHist([image2], [i], None, [256], [0, 256])
-                
-                diff_hist = hist1 - hist2
-                
-                plt.subplot(1, 3, i+1)
-                plt.plot(hist1, color=color, label='Image 1')
-                plt.plot(hist2, color=color, linestyle='dashed', label='Image 2')
-                plt.plot(diff_hist, color='black', linestyle='dotted', label='Difference')
-                plt.title(f'Histogram Comparison for {color.upper()} channel')
-                plt.xlabel('Pixel value')
-                plt.ylabel('Frequency')
-                plt.legend()
-            
-            plt.tight_layout()
-            plt.savefig('Histogramas_detallado.png')
-            plt.show()
-        # Ejemplo de uso
-        compare_histograms_detailed(image, image_pt)
-
-
-        def highlight_differences(image1, image2, threshold=30):
-            # Calcula la diferencia absoluta entre las imágenes
-            difference = cv2.absdiff(image1, image2)
-            gray_diff = cv2.cvtColor(difference, cv2.COLOR_BGR2GRAY)
-            
-            # Aplica un umbral para resaltar las diferencias significativas
-            _, mask = cv2.threshold(gray_diff, threshold, 255, cv2.THRESH_BINARY)
-            
-            # Colorea las diferencias en la imagen original
-            diff_highlight = image1.copy()
-            diff_highlight[mask != 0] = [0, 0, 255]  # Resaltar diferencias en rojo
-            return diff_highlight, mask
-
-        # Ejemplo de uso
-        diff_highlight, mask = highlight_differences(image, image_pt)
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(cv2.cvtColor(diff_highlight, cv2.COLOR_BGR2RGB))
-        plt.axis('off')
-        plt.title('Diferencias resaltadas en rojo')
-        plt.savefig('Dif_rojo.png')
-        plt.show()
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(mask, cmap='gray')
-        plt.axis('off')
-        plt.title('Máscara de diferencias')
-        plt.savefig('Dif_mask.png')
-        plt.show()
-        pass
 
     def classify(self, image_path=None, image=None, tracked_objects=None, match=None, visualize=False, missing_ids=set(), frame_number=0, firstFrame = False):
+        """
+        Classify players by analyzing the image and clustering their histograms.
 
-        # Lectura de imagen por path
+        Parameters:
+        - image_path: Path to the input image.
+        - image: Input image as a numpy array.
+        - tracked_objects: List of tracked objects.
+        - match: Match instance to store classification.
+        - visualize: Boolean to enable visualization.
+        - missing_ids: Set of IDs for players that are missing.
+        - frame_number: Current frame number.
+        - firstFrame: Boolean indicating if this is the first frame.
+        """
+        # Load image from path if provided
         if image_path:
             print("Image path")
             image = cv2.imread(image_path)
             print(image.shape)
-            print(image.dtype, image.min(), image.max())
             plt.figure(figsize=(10, 10))
             plt.imshow(image)
-            # plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             plt.axis('off')
             plt.title('Original Image')
             plt.savefig('image_path.png')
             plt.show()
         elif image is not None:
-            # print("Image cv2")
-
             cv2.imwrite("tempImage.jpg", image)
             image = cv2.imread("tempImage.jpg")
-
-            
         else:
-            raise ValueError("Se debe proporcionar una imagen o una ruta de imagen.")
+            raise ValueError("An image or an image path must be provided.")
         
-        
-
-        # Inference
+        # Run Detectron2 model inference
         outputs = self.predictor(image)
         instances = outputs["instances"]
 
-        # Filtrar solo las detecciones de personas
+        # Filter detections for only players (person class)
         person_instances = instances[instances.pred_classes == 0]
         
         if visualize:
             self.visualize_instances(image, person_instances)
             self.visualize_instances(image, instances)
 
-        # Calcular histogramas para cada persona detectada
+        # Calculate histograms for each detected player
         histograms = []
         for i in range(len(person_instances)):
             mask = person_instances.pred_masks[i].cpu().numpy()
             hist = self.calculate_histogram(mask, image)
             histograms.append(hist)
 
-        # No se puede inicializar hasta que existan por lo menos 8 jugadores detectadis
+        # Wait until at least 8 players are detected to initialize
         if firstFrame and len(histograms) < 8:
             return match
 
-        # Guardar histogramas y etiquetas iniciales
-        if firstFrame:  # Asumiendo que este es el primer frame o uno de los primeros donde se hace la clusterización inicial
+        # Store initial histograms and labels for clustering in the first frame
+        if firstFrame:
             self.initial_histograms = histograms
             clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
             labels = clusterer.fit_predict(histograms)
             self.initial_labels = labels.tolist()
             
             self.histograms = histograms
-            self.labels = labels.tolist()  # Convertir a lista
+            self.labels = labels.tolist()
 
         else:
+            # Predict clusters with k-NN for new frames
             labels = self.knn.predict(histograms)
-            # Convertir self.labels y labels a listas si no lo son
+
             if isinstance(self.labels, np.ndarray):
                 self.labels = self.labels.tolist()
             if isinstance(labels, np.ndarray):
                 labels = labels.tolist()
 
-            # Unir los nuevos histogramas y etiquetas a los existentes
             self.histograms.extend(histograms)
             self.labels.extend(labels)
 
-        # Entrenar modelo con todos los histogramas y labels
+        # Train k-NN model with all histograms and labels
         self.knn.fit(self.histograms, self.labels)
-
-        # # Aplicar HDBSCAN a los histogramas
-        # clusterer = hdbscan.HDBSCAN(min_cluster_size=2, metric='euclidean')
-        # labels = clusterer.fit_predict(histograms)
-
         
-        # Encontrar los dos clusters más grandes omitiendo el label -1
+        # Find top two clusters with most detections, excluding outliers
         unique_labels, counts = np.unique(labels, return_counts=True)
         valid_indices = unique_labels != -1
         unique_labels = unique_labels[valid_indices]
@@ -279,12 +174,18 @@ class PlayerClassifier:
             self.visualize_clusters(image, person_instances, labels, frame_number)
             self.visualize_tracked_objects(image, tracked_objects, frame_number)
 
+        # Assign clusters to tracked objects if available
         if tracked_objects and match:
             return self.assign_clusters_to_tracked_objects(person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids)
-        
-        
-
+    
     def visualize_instances(self, image, person_instances):
+        """
+        Visualize player instances on the image.
+
+        Parameters:
+        - image: Input image.
+        - person_instances: Detected person instances from Detectron2.
+        """
         v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(self.cfg.DATASETS.TRAIN[0]), scale=1.2, instance_mode=ColorMode.IMAGE)
         out = v.draw_instance_predictions(person_instances.to("cpu"))
         result_image = out.get_image()[:, :, ::-1]
@@ -295,8 +196,17 @@ class PlayerClassifier:
         plt.savefig('Segmentacion.png')
         plt.show()
 
-    # Este metodo regresa True si no hay ningun jugador actual en match
     def totallyNewPlayers(self, match, tracked_objects):
+        """
+        Check if no tracked players currently match any previously known players.
+
+        Parameters:
+        - match: Match instance.
+        - tracked_objects: List of tracked objects.
+
+        Returns:
+        - Boolean indicating if all players are new.
+        """
         player_ids = set(match.players.keys())
 
         for obj in tracked_objects:
@@ -306,6 +216,17 @@ class PlayerClassifier:
         return True
     
     def few_players_in_team(self, match, tracked_objects, top_two_clusters):
+        """
+        Check if there are fewer than a minimum number of players in any team.
+
+        Parameters:
+        - match: Match instance.
+        - tracked_objects: List of tracked objects.
+        - top_two_clusters: List of cluster labels for top two teams.
+
+        Returns:
+        - Boolean indicating if any team has too few players.
+        """
         team_counts = Counter()
         player_ids = set(match.players.keys())
         
@@ -322,21 +243,28 @@ class PlayerClassifier:
         return False
 
     def assign_clusters_to_tracked_objects(self, person_instances, labels, tracked_objects, match, top_two_clusters, missing_ids):
+        """
+        Assign clusters to tracked objects based on detected clusters and player teams.
 
-        
+        Parameters:
+        - person_instances: Detected player instances.
+        - labels: Predicted cluster labels.
+        - tracked_objects: List of tracked objects.
+        - match: Match instance for player information.
+        - top_two_clusters: List of cluster labels for top two teams.
+        - missing_ids: Set of missing player IDs.
 
-        # Obtenemos los IDs de los jugadores existentes
+        Returns:
+        - Updated match instance with assigned clusters.
+        """
         player_ids = set(match.players.keys())
-
         totallyNewPlayers = self.totallyNewPlayers(match, tracked_objects)
 
-        # Antes tenia len(player_ids) == 0 or
         if totallyNewPlayers:
             if len(tracked_objects) < 6:
                 return match
 
-            print("Esto solo se debe de imprimir una sola vez a menos que se dejen de detectar jugadores")
-            # Si no hay jugadores existentes, seguimos la lógica original
+            print("This should only print once unless players stop being detected.")
             for obj in tracked_objects:
                 x1, y1, x2, y2 = obj.estimate.flatten().tolist()
                 obj_box = [x1, y1, x2, y2]
@@ -354,37 +282,8 @@ class PlayerClassifier:
                     match.add_player(player_id=obj.id, team=assigned_cluster)
                 else:
                     match.add_extra_people(extra_id=obj.id)
-
-        elif self.few_players_in_team(match,tracked_objects, top_two_clusters): # Reidentificacion
-            # print("Reidentificación y reasignación de equipos")
-
-            for obj in tracked_objects:
-                x1, y1, x2, y2 = obj.estimate.flatten().tolist()
-                obj_box = [x1, y1, x2, y2]
-                max_iou = 0
-                assigned_cluster = -1
-                
-                for i in range(len(person_instances)):
-                    box = person_instances.pred_boxes.tensor[i].cpu().numpy().astype(int)
-                    iou = self.calculate_iou(obj_box, box)
-                    if iou > max_iou:
-                        max_iou = iou
-                        assigned_cluster = labels[i]
-                
-                if assigned_cluster in top_two_clusters:
-                    if obj.id in player_ids:
-                        # Reasignar el equipo del jugador existente
-                        match.players[obj.id].team = assigned_cluster
-                    elif obj.id in missing_ids:
-                        # Agregar el nuevo jugador
-                        match.add_player(player_id=obj.id, team=assigned_cluster)
-                else:
-                    if obj.id in missing_ids:
-                        match.add_extra_people(extra_id=obj.id)
         else:
-            # Crear un diccionario para mapear los clústeres a los equipos existentes
-            # print("Previous Players")
-            # print(match)
+            # Mapping clusters to existing teams
             cluster_to_team_counts = defaultdict(Counter)
             existing_teams = set()
 
@@ -392,58 +291,54 @@ class PlayerClassifier:
                 player = match.players[player_id]
                 team_number = player.team
                 existing_teams.add(team_number)
-                assigned_cluster = self.get_cluster_for_player(player_id, labels, tracked_objects, person_instances, top_two_clusters)  # Asumimos que existe esta función
-                # print(f"PlayerId = {player_id}, team = {team_number}, ActualCluster = {assigned_cluster}")
+                assigned_cluster = self.get_cluster_for_player(player_id, labels, tracked_objects, person_instances, top_two_clusters)
                 if assigned_cluster is not None:
                     cluster_to_team_counts[assigned_cluster][team_number] += 1
-            # cluster_to_team = {actual_cluster: team_assigned_previous}
-            # print(cluster_to_team_counts)
 
-            # Determinar el equipo mayoritario para cada clúster
+            # Assign majority team to each cluster
             cluster_to_team = {}
             for cluster, team_counts in cluster_to_team_counts.items():
                 if len(team_counts) > 1 and team_counts.most_common(2)[0][1] == team_counts.most_common(2)[1][1]:
-                    # Si hay un empate, no asignamos un equipo a este clúster
                     continue
                 most_common_team = team_counts.most_common(1)[0][0]
                 cluster_to_team[cluster] = most_common_team
 
-            # print(f"Cluster Inicial: {cluster_to_team}")
-
-
-            # Asignar el equipo no asignado al clúster restante si solo uno tiene asignación
+            # Assign remaining team to remaining cluster if only one team is assigned
             assigned_teams = set(cluster_to_team.values())
             if len(assigned_teams) == 1 and len(existing_teams) == 2:
                 remaining_team = list(existing_teams - assigned_teams)[0]
                 remaining_cluster = list(set(top_two_clusters) - set(cluster_to_team.keys()))[0]
                 cluster_to_team[remaining_cluster] = remaining_team
 
-            # print(f"Cluster Final: {cluster_to_team}")
-            
-            # Verificamos si missing_ids no está vacío
             if missing_ids:
                 for obj in tracked_objects:
                     if obj.id in missing_ids and obj.label == 1:
-                        # print(f"missing id: {obj.id}")
-
                         assigned_cluster = self.get_cluster_for_object(obj, labels, tracked_objects, person_instances)
-                        # print(f"Cluster del id: {assigned_cluster}")
-
                         if assigned_cluster in cluster_to_team:
                             team_number = cluster_to_team[assigned_cluster]
                             match.add_player(player_id=obj.id, team=team_number)
                         elif assigned_cluster != -1 or assigned_cluster is None:
                             match.add_extra_people(extra_id=obj.id)
-            
 
         return match
 
-        # Función para obtener el clúster asignado a un jugador existente (suponiendo que se basa en la IoU)
     def get_cluster_for_player(self, player_id, labels, tracked_objects, person_instances, top_two_clusters):
+        """
+        Get the cluster assigned to an existing player using IoU matching.
+
+        Parameters:
+        - player_id: ID of the player.
+        - labels: Predicted cluster labels.
+        - tracked_objects: List of tracked objects.
+        - person_instances: Detected person instances.
+        - top_two_clusters: List of cluster labels for top two teams.
+
+        Returns:
+        - Assigned cluster for the player.
+        """
         max_iou = 0
         assigned_cluster = None
 
-        # Lógica para determinar el clúster de un jugador existente
         for obj in tracked_objects:
             if obj.id == player_id:
                 x1, y1, x2, y2 = obj.estimate.flatten().tolist()
@@ -456,12 +351,21 @@ class PlayerClassifier:
                         potential_cluster = labels[i]
                         if potential_cluster in top_two_clusters:
                             assigned_cluster = potential_cluster
-                            
         return assigned_cluster
 
-
-    # Función para obtener el clúster asignado a un nuevo objeto
     def get_cluster_for_object(self, obj, labels, tracked_objects, person_instances):
+        """
+        Get the cluster assigned to a new object using IoU matching.
+
+        Parameters:
+        - obj: Tracked object.
+        - labels: Predicted cluster labels.
+        - tracked_objects: List of tracked objects.
+        - person_instances: Detected person instances.
+
+        Returns:
+        - Assigned cluster for the object.
+        """
         x1, y1, x2, y2 = obj.estimate.flatten().tolist()
         obj_box = [x1, y1, x2, y2]
         max_iou = 0
@@ -474,23 +378,24 @@ class PlayerClassifier:
                 assigned_cluster = labels[i]
         return assigned_cluster
 
+    def visualize_tracked_objects(self, image, tracked_objects, frame_number):
+        """
+        Visualize bounding boxes and IDs of tracked objects on the image.
 
-    
-    def visualize_tracked_objects(self, image, tracked_objects,frame_number):
-        # Copiar la imagen original para dibujar las bounding boxes
+        Parameters:
+        - image: Input image.
+        - tracked_objects: List of tracked objects.
+        - frame_number: Current frame number.
+        """
         bounding_box_image = image.copy()
 
-        # Dibujar las bounding boxes y los IDs de los objetos seguidos
         for obj in tracked_objects:
             x1, y1, x2, y2 = map(int, obj.estimate.flatten().tolist())
-            color = (0, 255, 0)  # Verde para las bounding boxes de los objetos seguidos
+            color = (0, 255, 0)
             cv2.rectangle(bounding_box_image, (x1, y1), (x2, y2), color, 2)
             cv2.putText(bounding_box_image, f'ID: {obj.id}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-        # Convertir la imagen de BGR a RGB para visualizarla correctamente con matplotlib
         bounding_box_image_rgb = cv2.cvtColor(bounding_box_image, cv2.COLOR_BGR2RGB)
-        
-        # Mostrar la imagen con las bounding boxes y los IDs
         plt.figure(figsize=(10, 10))
         plt.imshow(bounding_box_image_rgb)
         plt.axis('off')
@@ -499,6 +404,15 @@ class PlayerClassifier:
         plt.show()
 
     def visualize_clusters(self, image, person_instances, labels, frame_number):
+        """
+        Visualize bounding boxes and cluster labels for each detected person.
+
+        Parameters:
+        - image: Input image.
+        - person_instances: Detected player instances.
+        - labels: Cluster labels for each instance.
+        - frame_number: Current frame number.
+        """
         colors = plt.cm.get_cmap('tab10', np.max(labels) + 1)
         bounding_box_image = image.copy()
         for i in range(len(person_instances)):
@@ -515,7 +429,6 @@ class PlayerClassifier:
         plt.title('Bounding Box Image with Cluster Colors')
         plt.savefig(f'{frame_number}_result_image_with_clusters.png')
         plt.show()
-
 
 
 # Ejemplo de uso de la clase

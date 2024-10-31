@@ -3,41 +3,50 @@ import os
 
 class Player:
     """
-        team: es el id del cluster
+    Represents a player with an associated team (cluster ID).
+    
+    Parameters:
+    - player_id: Unique identifier for the player.
+    - team: Cluster ID representing the player's team.
     """
     def __init__(self, player_id: int, team: str):
-        self.id = player_id # Es el mismo que tracked Id
+        self.id = player_id  # Same as the tracked ID
         self.team = team
 
     def __str__(self):
         return f"Player(player_id={self.id}, team={self.team})"
 
 
-
-
-
-# Ejemplo de uso
-# tracked_objects = [...]  # Lista de objetos rastreados
-# image = ...  # Imagen cargada con OpenCV
-# balls = check_ball_possession(tracked_objects, image)
-# for ball in balls:
-#     print("Balón en posesión:", ball.in_possession)
-
-
-
 class Ball:
+    """
+    Represents the ball in the match, tracking its possession and transit status.
+    
+    Parameters:
+    - id: Unique identifier for the ball.
+    """
     def __init__(self, id):
         self.id = id
         self.inPossession = False
-        self.framesInPossession = 0
-        self.framesInTransit = 0
-        self.initFrameNumber = 0
+        self.framesInPossession = 0  # Number of frames the ball is in possession
+        self.framesInTransit = 0  # Frames while the ball is not in possession
+        self.initFrameNumber = 0  # Starting frame number when transit starts
 
     def __str__(self):
         return f"Ball(id={self.id})"
     
 
 class Pass:
+    """
+    Represents a pass between two players, including validation and timing information.
+    
+    Parameters:
+    - initPlayer: Player initiating the pass.
+    - finalPlayer: Player receiving the pass.
+    - frames: Total frames from start to end of the pass.
+    - secondFinalPass: Timestamp for the end of the pass.
+    - initFrame: Initial frame number for the pass.
+    - secondInitPass: Timestamp for the start of the pass.
+    """
     def __init__(self, initPlayer, finalPlayer, frames, secondFinalPass, initFrame, secondInitPass):
         self.initPlayer = initPlayer
         self.finalPlayer = finalPlayer
@@ -46,13 +55,24 @@ class Pass:
         self.initFrame = initFrame
         self.secondInitPass = secondInitPass
         
-        self.valid = self.isValid() # Esto dice si e sun pase valido de compañero a compañero
+        self.valid = self.isValid()  # Determine if pass is valid (from teammate to teammate)
 
     def isValid(self):
+        """
+        Check if the pass is valid by verifying if both players are on the same team.
+        
+        Returns:
+        - True if both players are on the same team, False otherwise.
+        """
         return self.initPlayer.team == self.finalPlayer.team
     
     def save_to_csv(self, file_path):
-        # Define the row to be added
+        """
+        Save the pass information to a CSV file.
+        
+        Parameters:
+        - file_path: Path to the CSV file.
+        """
         row = [
             self.initPlayer.id,
             self.finalPlayer.id,
@@ -68,15 +88,15 @@ class Pass:
         with open(file_path, mode='a', newline='') as file:
             writer = csv.writer(file)
             
-            # If the file does not exist, write the header
+            # Write header if the file does not exist
             if not file_exists:
                 writer.writerow(['Passer (id)', 'Receiver (id)', 'Start Time (s)', 'Duration (s)', 'End Time (s)'])
             
-            # Write the row of data
+            # Write pass data to CSV
             writer.writerow(row)
 
     def __str__(self):
         return (f"Pass(initPlayer={self.initPlayer} "
-                f"finalPlayer={self.finalPlayer}"
+                f"finalPlayer={self.finalPlayer} "
                 f"frames={self.frames}, initFrame={self.initFrame}, "
                 f"secondInitPass={self.secondInitPass}, secondFinalPass={self.secondFinalPass}, valid={self.valid})")
